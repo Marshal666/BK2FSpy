@@ -3,53 +3,76 @@ from pak_loader import PakLoader
 from console_logger import ConsoleLogger
 from virtual_file_system import VirtualFileSystem
 from enum import Enum
+import shlex
 
 
 class Modes(Enum):
+	EXIT = 0
 	PRINT_TO_CONSOLE = 1
 	WRITE_TO_FILE = 2
+	FILE_EXISTS = 3
 
 
 game_path = r"C:\Program Files (x86)\Blitzkrieg 2 -  Total Conversion\Data"
-mode = Modes.WRITE_TO_FILE
-out_path = r"tex.dds"
-file_path = r"Units/Technics/GB/Tanks/Churchill_MkV_Can/1_Texture.dds"
 
 
-def print_to_console():
-	global game_path
-
-	logger = ConsoleLogger()
-	folder = FolderSystem(game_path)
-	fs = VirtualFileSystem(folder)
-	pk = PakLoader(game_path, logger)
-	fs.add_system(pk)
-
-	global file_path
-	print(fs.read_text_file(file_path))
+def exit_app(*args):
+	exit(0)
 
 
-def write_to_file():
-	global game_path
-
-	logger = ConsoleLogger()
-	folder = FolderSystem(game_path)
-	fs = VirtualFileSystem(folder)
-	pk = PakLoader(game_path, logger)
-	fs.add_system(pk)
-
-	global file_path
-	global out_path
-	with open(out_path, "wb") as file:
-		file.write(fs.read_file_bytes(file_path))
+def print_to_console(*args):
+	fs: VirtualFileSystem = args[0]
+	path: str = args[1]
+	print(fs.read_text_file(path))
 
 
-modes_dict = {Modes.PRINT_TO_CONSOLE: print_to_console, Modes.WRITE_TO_FILE: write_to_file}
+def write_to_file(*args):
+	fs: VirtualFileSystem = args[0]
+	path: str = args[1]
+	path_out = args[2]
+	with open(path_out, "wb") as file:
+		file.write(fs.read_file_bytes(path))
+
+
+def file_exists(fs: VirtualFileSystem, path: str):
+	print(fs.contains_file(path))
+
+
+modes_dict = {
+	Modes.EXIT: exit_app,
+	Modes.PRINT_TO_CONSOLE: print_to_console,
+	Modes.WRITE_TO_FILE: write_to_file,
+	Modes.FILE_EXISTS: file_exists
+	}
+
+modes_keys = {
+	"p": Modes.PRINT_TO_CONSOLE,
+	"print": Modes.PRINT_TO_CONSOLE,
+	"w": Modes.WRITE_TO_FILE,
+	"write": Modes.WRITE_TO_FILE,
+	"c": Modes.FILE_EXISTS,
+	"check": Modes.FILE_EXISTS,
+	"fe": Modes.FILE_EXISTS,
+	"exit": Modes.EXIT,
+}
 
 
 def main():
-	global mode
-	modes_dict[mode]()
+	global game_path
+
+	logger = ConsoleLogger()
+	folder = FolderSystem(game_path)
+	fs = VirtualFileSystem(folder)
+	pk = PakLoader(game_path, logger)
+	fs.add_system(pk)
+
+	while 1:
+		args = input("Enter command: ")
+		args = shlex.split(args)
+		mode = modes_keys[args[0]]
+		args[0] = fs
+		args = tuple(args)
+		modes_dict[mode](*args)
 	return 0
 
 

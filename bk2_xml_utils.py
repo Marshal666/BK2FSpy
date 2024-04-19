@@ -36,6 +36,13 @@ def format_href(href: str, remove_extension=True):
 	return href
 
 
+def add_and_write_href_file(system: VirtualFileSystemBaseClass, href_element, file_path: str, file_content: bytes,
+							abs_path: str = ""):
+	full_path = os.path.join(abs_path, file_path)
+	system.write_to_file(full_path, file_content)
+	href_element.attrib["href"] = file_path
+
+
 def add_root_directory(href: str, root_directory: str):
 	href = href.replace("\\", "/").lower()
 	if not root_directory:

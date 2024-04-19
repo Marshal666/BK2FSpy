@@ -1,3 +1,4 @@
+import utils
 from folder_system import FolderSystem
 from pak_loader import PakLoader
 from console_logger import ConsoleLogger
@@ -39,25 +40,27 @@ def main():
     nation_ids = [1, 2, 3, 5, 6]
     tech_level = 6
 
-    map_folder = r"Custom\Missions\ReinfInspection_Template"
-    map_template = r"Custom\Missions\ReinfInspection_Template\mapinfo.xdb"
+    map_name = "ReinfInspection"
 
-    map = bk2_xml_utils.load_xml_file(fs, map_template)
-    done = False
+    map_folder = r"Custom/Missions/ReinfInspection_Template/"
+    map_template = r"Custom/Missions/ReinfInspection_Template/mapinfo.xdb"
 
     done_ids = set()
 
     spawn_pos_start = (450, 200, 0)
 
-    spawn_pos = spawn_pos_start
-    reinf_offset = (180, 0, 0)
-    unit_offset = (0, 225, 0)
-
+    counter = 0
     for i, side in enumerate(consts.Sides.Item):
-        if done:
-            break
         if i in nation_ids and i not in done_ids:
             done_ids.add(i)
+            counter += 1
+
+            map = bk2_xml_utils.load_xml_file(fs, map_template)
+
+            spawn_pos = spawn_pos_start
+            reinf_offset = (180, 0, 0)
+            unit_offset = (0, 225, 0)
+
             map.Players.Item[0].PartyInfo.attrib["href"] = side.PartyInfo.attrib["href"]
             level = side.TechLevels.Item[tech_level]
             reinfs = level.Reinforcements.Item
@@ -75,8 +78,10 @@ def main():
                         bk2_map_xml_utils.add_object_on_map(map, unit.Squad.attrib["href"], pos, 32000, 0)
                         continue
                 spawn_pos = tuple_sum(spawn_pos, reinf_offset)
-            done = True
-    bk2_xml_utils.save_object_as_xml(map, fs, r"Custom\Missions\ReinfInspection_Template\mapinfo1.xdb")
+            map_name_bytes = utils.string_to_utf16_le(f"{map_name}{counter}")
+            bk2_xml_utils.add_and_write_href_file(fs, map.LocalizedNameFileRef, f"name{counter}.txt", map_name_bytes,
+                                                  map_folder)
+            bk2_xml_utils.save_object_as_xml(map, fs, fr"Custom\Missions\ReinfInspection_Template\mapinfo{counter}.xdb")
     return 0
 
 

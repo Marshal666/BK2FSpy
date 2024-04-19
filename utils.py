@@ -1,4 +1,5 @@
 import os
+import codecs
 
 
 def full_path(path: str):
@@ -15,6 +16,10 @@ def decode_bytes_string(string: bytes):
 	if string[0] == 255 and string[1] == 254:
 		encoding = "utf-16-le"
 	return string.decode(encoding)
+
+
+def string_to_utf16_le(string: str):
+	return codecs.BOM_UTF16_LE + str.encode(string, "utf-16-le")
 
 
 def is_slash(string: str):

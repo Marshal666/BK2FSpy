@@ -10,6 +10,10 @@ def formatted_path(path: str):
 	return path.lower().replace("\\", "/")
 
 
+def path_folder(path: str):
+	return os.path.dirname(formatted_path(path))
+
+
 def decode_bytes_string(string: bytes):
 	encoding = "utf-8"
 	# UTF-16 LE BOM detection

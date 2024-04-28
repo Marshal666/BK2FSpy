@@ -1,8 +1,6 @@
 import lxml.etree
 from lxml import objectify
 from lxml.etree import tostring
-
-import utils
 from virtual_file_system_abstract import VirtualFileSystemBaseClass
 from utils import is_slash
 from logger_abstract import LoggerAbstract
@@ -56,6 +54,8 @@ def add_root_directory(href: str, root_directory: str):
 def href_file_exists(href_object, system: VirtualFileSystemBaseClass, root_directory: str=None, remove_extension=True):
 	href = href_object.attrib["href"]
 	href = format_href(href, remove_extension)
+	if not href:
+		return False
 	directory = add_root_directory(href, root_directory)
 	if system.contains_file(directory):
 		return True
@@ -113,19 +113,29 @@ def href_get_binary_file_contents(href_object, system: VirtualFileSystemBaseClas
 	if not href:
 		return None
 	directory = add_root_directory(href, root_directory)
-	binary_file_content = system.read_file_bytes(directory)
-	if binary_file_content is not None:
-		return binary_file_content
-	binary_file_content = system.read_file_bytes(href)
-	if binary_file_content is not None:
-		return binary_file_content
+	if system.contains_file(directory):
+		return system.read_file_bytes(directory)
+	if system.contains_file(href):
+		return system.read_file_bytes(href)
 	raise Exception(f"File: {href} not found!")
 
 
 def href_read_xml_object(href_object, system: VirtualFileSystemBaseClass, root_directory: str=None,
 						remove_extension=True, logger: LoggerAbstract=None):
-	contents = href_get_file_contents(href_object, system, root_directory, remove_extension, logger)
+	contents = href_get_binary_file_contents(href_object, system, root_directory, remove_extension, logger)
 	return objectify.fromstring(contents)
+
+
+def copy_file_to_folder(file_system: VirtualFileSystemBaseClass, source: str, destination_folder: str) -> bool:
+	if not file_system.contains_file(source):
+		return False
+	destination = os.path.join(destination_folder, source)
+	destination_folder = os.path.dirname(destination)
+	if not os.path.exists(destination_folder):
+		os.makedirs(destination_folder)
+	with open(destination, "wb") as f:
+		f.write(file_system.read_file_bytes(source))
+	return True
 
 
 class VisualObjectReader:
@@ -135,90 +145,111 @@ class VisualObjectReader:
 		self.xml_object = None
 		self.root_directory = None
 		self.used_file_paths = used_file_paths
-		self.result: set[str] = None
+		self.result: set[str] | None = None
 
-	def add_used_file_path(self, href_element, root_directory: str=""):
-		if self.used_file_paths:
-			if type(href_element) is str and href_file_exists(href_element, self.file_system, root_directory):
+	def read_RPGStats(self, path, root_directory: str=None):
+		file_xml = load_xml_file(self.file_system, path)
+		self.__read_binaries(file_xml, root_directory, format_href(path))
+
+	def __add_used_file_path(self, href_element, root_directory: str= ""):
+		if self.used_file_paths is not None:
+			if type(href_element) is str and self.file_system.contains_file(href_element):
 				self.used_file_paths.add(actual_path(href_element, self.file_system, root_directory))
-			self.used_file_paths.add(actual_href_path(href_element, self.file_system, root_directory))
+				return
+			if href_file_exists(href_element, self.file_system, root_directory):
+				self.used_file_paths.add(actual_href_path(href_element, self.file_system, root_directory))
 
-	def read_binaries(self, xml_object, root_directory: str = "", element_path: str=""):
+	def __read_graphics_if_possible(self, xml_root, graphic_name: str, root_directory: str=None):
+		if hasattr(xml_root, graphic_name):
+			self.__read_object_graphics(getattr(xml_root, graphic_name), root_directory)
+
+	def __read_binaries(self, xml_object, root_directory: str = "", element_path: str= ""):
 		self.xml_object = xml_object
 		self.root_directory = root_directory
 		self.result = set()
 
 		# Damage levels
-		for item in self.xml_object.DamageLevels.Item:
-			self.read_object_graphics(item.VisObj, root_directory)
+		if hasattr(xml_object.DamageLevels, "Item"):
+			for item in xml_object.DamageLevels.Item:
+				self.__read_object_graphics(item.VisObj, root_directory)
 
 		# Visual Object
-		self.read_object_graphics(xml_object.visualObject, root_directory)
+		# self.__read_object_graphics(xml_object.visualObject, root_directory)
+		self.__read_graphics_if_possible(xml_object, "visualObject", root_directory)
 
 		# info Visual Object
-		self.read_object_graphics(xml_object.infoVisualObject, root_directory)
+		# self.__read_object_graphics(xml_object.infoVisualObject, root_directory)
+		self.__read_graphics_if_possible(xml_object, "infoVisualObject", root_directory)
 
 		# Animable Model
-		self.read_object_graphics(xml_object.AnimableModel, root_directory)
+		# self.__read_object_graphics(xml_object.AnimableModel, root_directory)
+		self.__read_graphics_if_possible(xml_object, "AnimableModel", root_directory)
 
 		# Transportable Model
-		self.read_object_graphics(xml_object.TransportableModel, root_directory)
+		# self.__read_object_graphics(xml_object.TransportableModel, root_directory)
+		self.__read_graphics_if_possible(xml_object, "TransportableModel", root_directory)
 
-		self.add_used_file_path(element_path, root_directory)
-		self.add_used_file_path(xml_object.IconTexture, root_directory)
-		self.add_used_file_path(xml_object.LocalizedNameFileRef, root_directory)
-		self.add_used_file_path(xml_object.FullDescriptionFileRef, root_directory)
+		self.__add_used_file_path(element_path, root_directory)
+		self.__read_texture(xml_object.IconTexture, root_directory)
+		self.__add_used_file_path(xml_object.LocalizedNameFileRef, root_directory)
+		self.__add_used_file_path(xml_object.FullDescriptionFileRef, root_directory)
 
-	def read_object_graphics(self, model_reference, root_directory: str= ""):
+	def __read_object_graphics(self, model_reference, root_directory: str= ""):
 		if not href_file_exists(model_reference, self.file_system, root_directory):
 			return
 		graphic_xml = href_read_xml_object(model_reference, self.file_system, root_directory)
 		for item in graphic_xml.Models.Item:
-			self.read_model(item, root_directory)
-		self.add_used_file_path(model_reference, root_directory)
+			self.__read_model(item.Model, root_directory)
+		self.__add_used_file_path(model_reference, root_directory)
 
 
-	def read_model(self, vis_obj_reference, root_directory: str= ""):
+	def __read_model(self, vis_obj_reference, root_directory: str= ""):
 		if not href_file_exists(vis_obj_reference, self.file_system, root_directory):
 			return
 		model_xml = href_read_xml_object(vis_obj_reference, self.file_system, root_directory)
 		for item in model_xml.Materials.Item:
-			self.read_material(item, root_directory)
-			self.add_used_file_path(item, root_directory)
-		self.read_geometry(model_xml.Geometry, root_directory)
-		self.read_skeleton(model_xml.Skeleton, root_directory)
+			self.__read_material(item, root_directory)
+			self.__add_used_file_path(item, root_directory)
+		self.__read_geometry(model_xml.Geometry, root_directory)
+		self.__read_skeleton(model_xml.Skeleton, root_directory)
 
-		self.add_used_file_path(model_xml.Skeleton, root_directory)
-		self.add_used_file_path(model_xml.Geometry, root_directory)
-		self.add_used_file_path(vis_obj_reference, root_directory)
+		self.__add_used_file_path(model_xml.Skeleton, root_directory)
+		self.__add_used_file_path(model_xml.Geometry, root_directory)
+		self.__add_used_file_path(vis_obj_reference, root_directory)
 
-	def read_material(self, material_reference, root_directory: str= ""):
+	def __read_material(self, material_reference, root_directory: str= ""):
 		if not href_file_exists(material_reference, self.file_system, root_directory):
 			return
 		material_xml = href_read_xml_object(material_reference, self.file_system, root_directory)
-		material_texture = href_read_xml_object(material_xml.Texture, self.file_system, root_directory)
-		self.result.add(actual_href_path(material_texture.DestName, self.file_system, root_directory))
-		self.add_used_file_path(material_xml.Texture, root_directory)
-		self.add_used_file_path(material_reference, root_directory)
+		self.__read_texture(material_xml.Texture, root_directory)
+		self.__add_used_file_path(material_reference, root_directory)
 
+	def __read_texture(self, texture_reference, root_directory: str= ""):
+		if not href_file_exists(texture_reference, self.file_system, root_directory):
+			return
+		texture_xml = href_read_xml_object(texture_reference, self.file_system, root_directory)
+		# TODO - better root path detection
+		self.result.add(actual_href_path(texture_xml.DestName, self.file_system, root_directory))
+		self.__add_used_file_path(texture_reference, root_directory)
 
-	def read_geometry(self, geometry_reference, root_directory: str= ""):
+	def __read_geometry(self, geometry_reference, root_directory: str= ""):
 		if not href_file_exists(geometry_reference, self.file_system, root_directory):
 			return
 		geometry_xml = href_read_xml_object(geometry_reference, self.file_system, root_directory)
 		self.result.add(f"bin/geometries/{geometry_xml.uid}")
 		ai_geometry = href_read_xml_object(geometry_xml.AIGeometry, self.file_system, root_directory)
-		self.result.add(f"bin/ai_geometries/{ai_geometry.uid}")
-		self.add_used_file_path(geometry_xml.AIGeometry, root_directory)
-		self.add_used_file_path(geometry_reference, root_directory)
+		self.result.add(f"bin/aigeometries/{ai_geometry.uid}")
+		self.__add_used_file_path(geometry_xml.AIGeometry, root_directory)
+		self.__add_used_file_path(geometry_reference, root_directory)
 
-	def read_skeleton(self, skeleton_reference, root_directory: str= ""):
+	def __read_skeleton(self, skeleton_reference, root_directory: str= ""):
 		if not href_file_exists(skeleton_reference, self.file_system, root_directory):
 			return
 		skeleton_xml = href_read_xml_object(skeleton_reference, self.file_system, root_directory)
 		self.result.add(f"bin/skeletons/{skeleton_xml.uid}")
-		for item in skeleton_xml.Animations.Item:
-			animation_xml = href_read_xml_object(item, self.file_system, root_directory)
-			self.result.add(f"bin/animations/{animation_xml.uid}")
-			self.add_used_file_path(item, root_directory)
-		self.add_used_file_path(skeleton_reference, root_directory)
+		if hasattr(skeleton_xml.Animations, "Item"):
+			for item in skeleton_xml.Animations.Item:
+				animation_xml = href_read_xml_object(item, self.file_system, root_directory)
+				self.result.add(f"bin/animations/{animation_xml.uid}")
+				self.__add_used_file_path(item, root_directory)
+		self.__add_used_file_path(skeleton_reference, root_directory)

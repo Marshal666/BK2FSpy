@@ -122,7 +122,8 @@ def search_filter(event=None):
 	bin_extr_data.items_variable.set(coll)
 
 
-def export_item(file_system: VirtualFileSystem, path: str, out_path: str, export_unit_folder: bool, export_unit_weapons: bool):
+def export_item(file_system: VirtualFileSystem, path: str, out_path: str, export_unit_folder: bool,
+				export_unit_weapons: bool):
 
 	if not os.path.isdir(out_path):
 		messagebox.showerror("Error", "Invalid export path given!")
@@ -131,8 +132,17 @@ def export_item(file_system: VirtualFileSystem, path: str, out_path: str, export
 	import bk2_xml_utils
 	bk2_xml_utils.load_xml_file(file_system, path)
 
-	# TODO
-	bk2_xml_utils.VisualObjectReader(file_system)
+	used_paths = set()
+	reader = bk2_xml_utils.VisualObjectReader(file_system, used_paths)
+	reader.read_RPGStats(path, os.path.dirname(path))
+
+	for result in reader.result:
+		if not bk2_xml_utils.copy_file_to_folder(file_system, result, out_path):
+			messagebox.showerror("Error", f"Error copying '{result}' to '{out_path}'")
+
+	if export_unit_folder:
+		for file in reader.used_file_paths:
+			bk2_xml_utils.copy_file_to_folder(file_system, file, out_path)
 
 	messagebox.showinfo("Info", "Exported!")
 	return
@@ -181,11 +191,21 @@ def main():
 	bin_extr_data.data_folder_entry = ttk.Entry(frame, width=100)
 	bin_extr_data.data_folder_entry.grid(column=1, row=0, pady=1)
 	ttk.Button(frame, text="...", width=7, command=data_folder_select_command).grid(column=2, row=0, pady=1)
+	if __debug__:
+		bin_extr_data.data_folder_entry.insert(
+			0,
+			r"C:/Program Files (x86)/Steam/steamapps/common/Blitzkrieg 2 Anthology/Blitzkrieg 2/Data"
+		)
 
 	ttk.Label(frame, text="Mod Folder: ").grid(column=0, row=1, pady=1)
 	bin_extr_data.mod_folder_entry = ttk.Entry(frame, width=100)
 	bin_extr_data.mod_folder_entry.grid(column=1, row=1, pady=1)
 	ttk.Button(frame, text="...", width=7, command=mod_folder_select_command).grid(column=2, row=1, pady=1)
+	if __debug__:
+		bin_extr_data.mod_folder_entry.insert(
+			0,
+			r"C:/Program Files (x86)/Steam/steamapps/common/Blitzkrieg 2 Anthology/Blitzkrieg 2/mods/Universal MOD-18 Xitest"
+		)
 
 	bin_extr_data.load_data_button = ttk.Button(frame, text="Load Data", width=20, command=load_data_command)
 	bin_extr_data.load_data_button.grid(column=0, row=2, columnspan=3, pady=1)
@@ -215,6 +235,11 @@ def main():
 	bin_extr_data.export_entry.grid(column=1, row=5, pady=1)
 	bin_extr_data.export_pick_button = ttk.Button(frame, text="...", width=7, command=select_export_folder_command)
 	bin_extr_data.export_pick_button.grid(column=2, row=5, pady=1)
+	if __debug__:
+		bin_extr_data.export_entry.insert(
+			0,
+			r"C:/Users/Adam/Desktop/export_test"
+		)
 
 	bin_extr_data.export_unit_folder_bool_var = tkinter.BooleanVar(value=True)
 	bin_extr_data.export_unit_folder_check_button = (

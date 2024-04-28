@@ -3,7 +3,7 @@ import typing
 from folder_system import VirtualFileSystemBaseClass
 from zipfile import ZipFile, ZipInfo
 import glob
-from utils import is_slash, full_path, decode_bytes_string, formatted_path
+from utils import is_slash, decode_bytes_string, formatted_path
 
 
 class ZipEntry:
@@ -25,6 +25,9 @@ class PakLoader(VirtualFileSystemBaseClass):
 		self.zip_entries = dict()
 		self.open_directory(start_dir)
 
+	def __path_format(self, path: str) -> str:
+		return formatted_path(path)
+
 	def open_directory(self, directory):
 		path = directory + "/*.pak"
 		if is_slash(directory[-1]):
@@ -37,7 +40,7 @@ class PakLoader(VirtualFileSystemBaseClass):
 				self.paks.append(archive)
 				for entry_iter in archive.filelist:
 					entry = ZipEntry(entry_iter)
-					entry_path = full_path(entry.filename)
+					entry_path = self.__path_format(entry.filename)
 					edit_time = datetime.datetime(*entry.date_time)
 					entry.archive = archive
 					if entry_path in self.zip_entries.keys():
@@ -52,16 +55,16 @@ class PakLoader(VirtualFileSystemBaseClass):
 		pass
 
 	def contains_file(self, path: str) -> bool:
-		return full_path(path) in self.zip_entries
+		return self.__path_format(path) in self.zip_entries
 
 	def last_modify_time(self, path: str) -> datetime.datetime:
-		return datetime.datetime(*self.zip_entries[full_path(path)].date_time)
+		return datetime.datetime(*self.zip_entries[self.__path_format(path)].date_time)
 
 	def __contains__(self, item):
 		return self.contains_file(item)
 
 	def open_file(self, item):
-		path = full_path(item)
+		path = self.__path_format(item)
 		if self.contains_file(path):
 			entry = self.zip_entries[path]
 			return entry.archive.open(entry.filename, "r")
@@ -77,7 +80,7 @@ class PakLoader(VirtualFileSystemBaseClass):
 		raise Exception("Cannot write files in .pak archives")
 
 	def get_source_file(self, path: str) -> str:
-		path = full_path(path)
+		path = self.__path_format(path)
 		return "pak: " + self.zip_entries[path].archive.filename
 
 	def get_all_files(self) -> list[str]:

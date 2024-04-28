@@ -1,6 +1,8 @@
 import datetime
 import io
 import typing
+
+import utils
 from utils import decode_bytes_string
 from virtual_file_system_abstract import VirtualFileSystemBaseClass
 
@@ -18,7 +20,7 @@ class VirtualFileSystem(VirtualFileSystemBaseClass):
 		self.systems.append(system)
 
 	def contains_file(self, path: str) -> bool:
-		if not path:
+		if not path.strip():
 			return False
 		if path in self.cache:
 			return True
@@ -49,6 +51,7 @@ class VirtualFileSystem(VirtualFileSystemBaseClass):
 		return self.contains_file(item)
 
 	def open_file(self, item):
+		item = utils.formatted_path(item)
 		if item in self.cache:
 			return io.BytesIO(self.cache[item])
 		ret = None

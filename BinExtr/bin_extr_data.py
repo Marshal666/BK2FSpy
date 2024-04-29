@@ -39,3 +39,5 @@ export_unit_folder_check_button: tkinter.Checkbutton = None
 export_weapons_bool_var: tkinter.BooleanVar = None
 
 export_weapons_check_button: tkinter.Checkbutton = None
+
+export_selected_item_button: tkinter.Button = None

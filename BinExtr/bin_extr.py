@@ -76,7 +76,7 @@ def load_data_command():
 	if not data_path:
 		data_path = path2
 
-	paths = list(dict.fromkeys([mod_path, data_path]))
+	paths = list(filter(None, dict.fromkeys([mod_path, data_path])))
 
 	for path in paths:
 		if not os.path.exists(path) or not os.path.isdir(path):
@@ -122,19 +122,18 @@ def search_filter(event=None):
 	bin_extr_data.items_variable.set(coll)
 
 
-def export_item(file_system: VirtualFileSystem, path: str, out_path: str, export_unit_folder: bool,
-				export_unit_weapons: bool):
+def export_RPGStats_item(file_system: VirtualFileSystem, path: str, out_path: str, export_unit_folder: bool,
+						 export_unit_weapons: bool):
 
 	if not os.path.isdir(out_path):
 		messagebox.showerror("Error", "Invalid export path given!")
 		return
 
 	import bk2_xml_utils
-	bk2_xml_utils.load_xml_file(file_system, path)
 
 	used_paths = set()
 	reader = bk2_xml_utils.VisualObjectReader(file_system, used_paths)
-	reader.read_RPGStats(path, os.path.dirname(path))
+	reader.read_RPGStats(path, os.path.dirname(path), export_unit_weapons)
 
 	for result in reader.result:
 		if not bk2_xml_utils.copy_file_to_folder(file_system, result, out_path):
@@ -148,11 +147,21 @@ def export_item(file_system: VirtualFileSystem, path: str, out_path: str, export
 	return
 
 
+def export_single_item(file_system: VirtualFileSystem, path: str, out_path: str):
+	if not os.path.isdir(out_path):
+		messagebox.showerror("Error", "Invalid export path given!")
+		return
+
+	import bk2_xml_utils
+
+	bk2_xml_utils.copy_file_to_folder(file_system, path, out_path)
+
+
 def items_list_selected(event=None):
 	index = event.widget.curselection()
 	# messagebox.showinfo("Info", f"Selected item: {bin_extr_data.items_list.get(index)}")
-	export_item(bin_extr_data.file_system, bin_extr_data.items_list.get(index), bin_extr_data.export_entry.get(),
-				bin_extr_data.export_unit_folder_bool_var.get(), bin_extr_data.export_weapons_bool_var.get())
+	export_RPGStats_item(bin_extr_data.file_system, bin_extr_data.items_list.get(index), bin_extr_data.export_entry.get(),
+						 bin_extr_data.export_unit_folder_bool_var.get(), bin_extr_data.export_weapons_bool_var.get())
 	return
 
 
@@ -167,8 +176,18 @@ def select_button_pressed():
 	if selected is None or len(selected) < 1:
 		messagebox.showerror("Error", "Nothing was selected for exporting")
 		return
-	export_item(bin_extr_data.file_system, bin_extr_data.items_list.get(selected[0]), bin_extr_data.export_entry.get(),
-				bin_extr_data.export_unit_folder_bool_var.get(), bin_extr_data.export_weapons_bool_var.get())
+	export_RPGStats_item(bin_extr_data.file_system, bin_extr_data.items_list.get(selected[0]), bin_extr_data.export_entry.get(),
+						 bin_extr_data.export_unit_folder_bool_var.get(), bin_extr_data.export_weapons_bool_var.get())
+	return
+
+
+def export_selected_item_command():
+	selected = bin_extr_data.items_list.curselection()
+	if selected is None or len(selected) < 1:
+		messagebox.showerror("Error", "Nothing was selected for exporting")
+		return
+	export_single_item(bin_extr_data.file_system, bin_extr_data.items_list.get(selected[0]), bin_extr_data.export_entry.get())
+	messagebox.showinfo("Info", "Exported!")
 	return
 
 
@@ -191,21 +210,21 @@ def main():
 	bin_extr_data.data_folder_entry = ttk.Entry(frame, width=100)
 	bin_extr_data.data_folder_entry.grid(column=1, row=0, pady=1)
 	ttk.Button(frame, text="...", width=7, command=data_folder_select_command).grid(column=2, row=0, pady=1)
-	if __debug__:
+	"""if __debug__:
 		bin_extr_data.data_folder_entry.insert(
 			0,
 			r"C:/Program Files (x86)/Steam/steamapps/common/Blitzkrieg 2 Anthology/Blitzkrieg 2/Data"
-		)
+		)"""
 
 	ttk.Label(frame, text="Mod Folder: ").grid(column=0, row=1, pady=1)
 	bin_extr_data.mod_folder_entry = ttk.Entry(frame, width=100)
 	bin_extr_data.mod_folder_entry.grid(column=1, row=1, pady=1)
 	ttk.Button(frame, text="...", width=7, command=mod_folder_select_command).grid(column=2, row=1, pady=1)
-	if __debug__:
+	"""if __debug__:
 		bin_extr_data.mod_folder_entry.insert(
 			0,
 			r"C:/Program Files (x86)/Steam/steamapps/common/Blitzkrieg 2 Anthology/Blitzkrieg 2/mods/Universal MOD-18 Xitest"
-		)
+		)"""
 
 	bin_extr_data.load_data_button = ttk.Button(frame, text="Load Data", width=20, command=load_data_command)
 	bin_extr_data.load_data_button.grid(column=0, row=2, columnspan=3, pady=1)
@@ -219,14 +238,14 @@ def main():
 	bin_extr_data.search_button.grid(column=2, row=3, pady=1)
 
 	bin_extr_data.items_variable = tkinter.Variable()
-	bin_extr_data.items_list = tkinter.Listbox(frame, height=24, width=125, selectmode=tkinter.SINGLE,
+	bin_extr_data.items_list = tkinter.Listbox(frame, height=24, width=120, selectmode=tkinter.SINGLE,
 											   listvariable=bin_extr_data.items_variable)
-	bin_extr_data.items_list.grid(column=0, row=4, columnspan=3, pady=1)
+	bin_extr_data.items_list.grid(column=0, row=4, columnspan=2, pady=1)
 	bin_extr_data.items_list.bind("<Double-Button-1>", items_list_selected)
 
 	scrollbar = bin_extr_data.scrollbar = Scrollbar(frame, orient="vertical")
 	scrollbar.config(command=bin_extr_data.items_list.yview)
-	scrollbar.grid(row=4, column=3, sticky='ns')
+	scrollbar.grid(row=4, column=2, sticky='ns')
 	bin_extr_data.items_list.config(yscrollcommand=scrollbar.set)
 
 	bin_extr_data.export_label = ttk.Label(frame, text="Export folder: ")
@@ -235,30 +254,35 @@ def main():
 	bin_extr_data.export_entry.grid(column=1, row=5, pady=1)
 	bin_extr_data.export_pick_button = ttk.Button(frame, text="...", width=7, command=select_export_folder_command)
 	bin_extr_data.export_pick_button.grid(column=2, row=5, pady=1)
-	if __debug__:
+	"""if __debug__:
 		bin_extr_data.export_entry.insert(
 			0,
 			r"C:/Users/Adam/Desktop/export_test"
-		)
+		)"""
 
 	bin_extr_data.export_unit_folder_bool_var = tkinter.BooleanVar(value=True)
 	bin_extr_data.export_unit_folder_check_button = (
 		ttk.Checkbutton(frame, text="Export Unit Folder", variable=bin_extr_data.export_unit_folder_bool_var))
 	bin_extr_data.export_unit_folder_check_button.grid(column=0, row=6, pady=1)
 
-	bin_extr_data.export_weapons_bool_var = tkinter.BooleanVar(value=False)
+	bin_extr_data.export_weapons_bool_var = tkinter.BooleanVar(value=True)
 	bin_extr_data.export_weapons_check_button = (
 		ttk.Checkbutton(frame, text="Export Unit Weapons", variable=bin_extr_data.export_weapons_bool_var))
 	bin_extr_data.export_weapons_check_button.grid(column=1, row=6, pady=1)
 
-	bin_extr_data.select_button = ttk.Button(frame, text="Export", width=8, command=select_button_pressed)
-	bin_extr_data.select_button.grid(column=2, row=6, pady=1)
+	bin_extr_data.export_selected_item_button = ttk.Button(frame, text="Export Selected Item",
+														   command=export_selected_item_command)
+	bin_extr_data.export_selected_item_button.grid(column=0, row=7, columnspan=1, pady=1)
+
+	bin_extr_data.select_button = ttk.Button(frame, text="Export RPGStats", width=16, command=select_button_pressed)
+	bin_extr_data.select_button.grid(column=1, row=7, columnspan=2, pady=1)
 
 	bin_extr_data.searching_items = [bin_extr_data.items_list, bin_extr_data.search_entry, bin_extr_data.search_button,
 									 bin_extr_data.select_button, bin_extr_data.export_entry,
 									 bin_extr_data.export_pick_button, bin_extr_data.export_label,
 									 bin_extr_data.export_weapons_check_button,
-									 bin_extr_data.export_unit_folder_check_button]
+									 bin_extr_data.export_unit_folder_check_button,
+									 bin_extr_data.export_selected_item_button]
 	set_items_state(bin_extr_data.searching_items, tkinter.DISABLED)
 
 	root.mainloop()

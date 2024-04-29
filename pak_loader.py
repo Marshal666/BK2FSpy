@@ -40,6 +40,8 @@ class PakLoader(VirtualFileSystemBaseClass):
 				self.paks.append(archive)
 				for entry_iter in archive.filelist:
 					entry = ZipEntry(entry_iter)
+					if is_slash(entry.filename[-1]):
+						continue
 					entry_path = self.__path_format(entry.filename)
 					edit_time = datetime.datetime(*entry.date_time)
 					entry.archive = archive

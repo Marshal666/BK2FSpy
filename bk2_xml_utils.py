@@ -147,9 +147,22 @@ class VisualObjectReader:
 		self.used_file_paths = used_file_paths
 		self.result: set[str] | None = None
 
-	def read_RPGStats(self, path, root_directory: str=None):
+	def read_RPGStats(self, path, root_directory: str=None, export_unit_weapons: bool=False):
 		file_xml = load_xml_file(self.file_system, path)
-		self.__read_binaries(file_xml, root_directory, format_href(path))
+		root_directory = self.__update_root_directory(path, root_directory)
+		self.__read_binaries(file_xml, root_directory, format_href(path), export_unit_weapons)
+
+	def __update_root_directory(self, file_path: str, root_directory: str=None):
+		if type(file_path) is not str:
+			file_path = file_path.attrib["href"]
+		if not root_directory or not root_directory.strip():
+			return file_path
+		root_dir = format_href(root_directory)
+		file_path = format_href(file_path)
+		file_dir = os.path.dirname(file_path)
+		if not file_dir:
+			return root_dir
+		return file_dir
 
 	def __add_used_file_path(self, href_element, root_directory: str= ""):
 		if self.used_file_paths is not None:
@@ -159,11 +172,15 @@ class VisualObjectReader:
 			if href_file_exists(href_element, self.file_system, root_directory):
 				self.used_file_paths.add(actual_href_path(href_element, self.file_system, root_directory))
 
+	def __add_used_file_path_if_possible(self, href_element, attribute: str, root_directory: str=""):
+		if hasattr(href_element, attribute):
+			self.__add_used_file_path(getattr(href_element, attribute), root_directory)
+
 	def __read_graphics_if_possible(self, xml_root, graphic_name: str, root_directory: str=None):
 		if hasattr(xml_root, graphic_name):
 			self.__read_object_graphics(getattr(xml_root, graphic_name), root_directory)
 
-	def __read_binaries(self, xml_object, root_directory: str = "", element_path: str= ""):
+	def __read_binaries(self, xml_object, root_directory: str = "", element_path: str = "", read_weapons: bool = False):
 		self.xml_object = xml_object
 		self.root_directory = root_directory
 		self.result = set()
@@ -189,15 +206,25 @@ class VisualObjectReader:
 		# self.__read_object_graphics(xml_object.TransportableModel, root_directory)
 		self.__read_graphics_if_possible(xml_object, "TransportableModel", root_directory)
 
-		self.__add_used_file_path(element_path, root_directory)
 		self.__read_texture(xml_object.IconTexture, root_directory)
-		self.__add_used_file_path(xml_object.LocalizedNameFileRef, root_directory)
-		self.__add_used_file_path(xml_object.FullDescriptionFileRef, root_directory)
+
+		self.__add_used_file_path(element_path, root_directory)
+		self.__add_used_file_path_if_possible(xml_object, "LocalizedNameFileRef", root_directory)
+		self.__add_used_file_path_if_possible(xml_object, "FullDescriptionFileRef", root_directory)
+
+		if read_weapons and hasattr(xml_object, "platforms") and hasattr(xml_object.platforms, "Item"):
+			for item in xml_object.platforms.Item:
+				if hasattr(item.guns, "Item"):
+					for gun in item.guns.Item:
+						self.__add_used_file_path_if_possible(gun, "Weapon", root_directory)
+
+
 
 	def __read_object_graphics(self, model_reference, root_directory: str= ""):
 		if not href_file_exists(model_reference, self.file_system, root_directory):
 			return
 		graphic_xml = href_read_xml_object(model_reference, self.file_system, root_directory)
+		root_directory = self.__update_root_directory(model_reference, root_directory)
 		for item in graphic_xml.Models.Item:
 			self.__read_model(item.Model, root_directory)
 		self.__add_used_file_path(model_reference, root_directory)
@@ -207,6 +234,7 @@ class VisualObjectReader:
 		if not href_file_exists(vis_obj_reference, self.file_system, root_directory):
 			return
 		model_xml = href_read_xml_object(vis_obj_reference, self.file_system, root_directory)
+		root_directory = self.__update_root_directory(vis_obj_reference, root_directory)
 		for item in model_xml.Materials.Item:
 			self.__read_material(item, root_directory)
 			self.__add_used_file_path(item, root_directory)
@@ -221,6 +249,7 @@ class VisualObjectReader:
 		if not href_file_exists(material_reference, self.file_system, root_directory):
 			return
 		material_xml = href_read_xml_object(material_reference, self.file_system, root_directory)
+		root_directory = self.__update_root_directory(material_reference, root_directory)
 		self.__read_texture(material_xml.Texture, root_directory)
 		self.__add_used_file_path(material_reference, root_directory)
 
@@ -228,7 +257,7 @@ class VisualObjectReader:
 		if not href_file_exists(texture_reference, self.file_system, root_directory):
 			return
 		texture_xml = href_read_xml_object(texture_reference, self.file_system, root_directory)
-		# TODO - better root path detection
+		root_directory = self.__update_root_directory(texture_reference, root_directory)
 		self.result.add(actual_href_path(texture_xml.DestName, self.file_system, root_directory))
 		self.__add_used_file_path(texture_reference, root_directory)
 
@@ -237,6 +266,7 @@ class VisualObjectReader:
 			return
 		geometry_xml = href_read_xml_object(geometry_reference, self.file_system, root_directory)
 		self.result.add(f"bin/geometries/{geometry_xml.uid}")
+		root_directory = self.__update_root_directory(geometry_reference, root_directory)
 		ai_geometry = href_read_xml_object(geometry_xml.AIGeometry, self.file_system, root_directory)
 		self.result.add(f"bin/aigeometries/{ai_geometry.uid}")
 		self.__add_used_file_path(geometry_xml.AIGeometry, root_directory)
@@ -246,6 +276,7 @@ class VisualObjectReader:
 		if not href_file_exists(skeleton_reference, self.file_system, root_directory):
 			return
 		skeleton_xml = href_read_xml_object(skeleton_reference, self.file_system, root_directory)
+		root_directory = self.__update_root_directory(skeleton_reference, root_directory)
 		self.result.add(f"bin/skeletons/{skeleton_xml.uid}")
 		if hasattr(skeleton_xml.Animations, "Item"):
 			for item in skeleton_xml.Animations.Item:

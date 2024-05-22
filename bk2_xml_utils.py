@@ -71,7 +71,7 @@ def actual_path(path: str, system: VirtualFileSystemBaseClass, root_directory: s
 		return directory
 	if system.contains_file(path):
 		return path
-	raise ValueError("href file not found")
+	raise ValueError(f"href file not found for {path}, root_dir: {root_directory}")
 
 
 def actual_href_path(href_object, system: VirtualFileSystemBaseClass, root_directory: str=None, remove_extension=True):

@@ -1,3 +1,4 @@
+import math
 import os
 import utils
 from folder_system import FolderSystem
@@ -5,7 +6,7 @@ from pak_loader import PakLoader
 from console_logger import ConsoleLogger
 from virtual_file_system import VirtualFileSystem
 from lxml import objectify
-from utils import tuple_sum, tuple_scalar_multiply
+from utils import tuple_sum, tuple_scalar_multiply, tuple_sub, tuple_average
 import bk2_map_xml_utils
 import bk2_xml_utils
 import argparse
@@ -13,11 +14,12 @@ import argparse
 
 class UnitPositioning:
 
-	spawn_pos_start = (400, 400, 0)
+	spawn_pos_start = (700, 700, 0)
 
 	unit_span = (17000, 17000)
 
-	unit_spacing = 90
+	unit_spacing_x = 120
+	unit_spacing_y = 210
 
 	"""reinf_offset = (600, 0, 0)
 	unit_offset = (0, 300, 0)
@@ -34,9 +36,44 @@ class UnitPositioning:
 		bk2_map_xml_utils.add_object_on_map(map, unit.attrib["href"], pos, direction, player)
 
 	@staticmethod
+	def __get_placement_pattern(unit_count: int, center_position: tuple) -> list[tuple[float]]:
+		# generate pattern
+		side = math.floor(math.sqrt(unit_count))
+		width = math.ceil(unit_count / side)
+		counter = 0
+		result = []
+		for column in range(side):
+			tmp = []
+			for row in range(width):
+				if counter >= unit_count:
+					break
+				tmp.append((row * UnitPositioning.unit_spacing_x, column * UnitPositioning.unit_spacing_y, 0))
+				counter += 1
+			# center the row around center_position.x
+			avg = tuple_average(tmp)
+			for i in range(len(tmp)):
+				# tmp[i][0] -= avg[0]
+				tmp[i] = (tmp[i][0] - avg[0], tmp[i][1], tmp[i][2])
+			result.extend(tmp)
+
+		# place result on the center_position
+		avg = tuple_average(result)
+		diff = tuple_sub(center_position, avg)
+		for i in range(len(result)):
+			result[i] = tuple_sum(result[i], diff)
+
+		return result
+
+	@staticmethod
 	def __get_position(tech_level: int, reinf: int, unit: int, unit_count: int, x_prog: float, y_prog: float)\
 			-> (float, float, float):
-		result = (reinf * x_prog + unit * UnitPositioning.unit_spacing, tech_level * y_prog, 0.0)
+		base_position = (reinf * x_prog, tech_level * y_prog, 0.0)
+		# result = (reinf * x_prog + unit * UnitPositioning.unit_spacing, tech_level * y_prog, 0.0)
+
+		pattern = UnitPositioning.__get_placement_pattern(unit_count, base_position)
+		result = pattern[unit]
+		# result = base_position
+
 		result = tuple_sum(result, UnitPositioning.spawn_pos_start)
 		return result
 

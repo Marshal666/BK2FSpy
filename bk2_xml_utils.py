@@ -117,12 +117,16 @@ def href_get_binary_file_contents(href_object, system: VirtualFileSystemBaseClas
 		return system.read_file_bytes(directory)
 	if system.contains_file(href):
 		return system.read_file_bytes(href)
-	raise Exception(f"File: {href} not found!")
+	# raise Exception(f"File: {href} not found!")
+	return None
 
 
 def href_read_xml_object(href_object, system: VirtualFileSystemBaseClass, root_directory: str=None,
 						remove_extension=True, logger: LoggerAbstract=None):
 	contents = href_get_binary_file_contents(href_object, system, root_directory, remove_extension, logger)
+	if not contents:
+		logger.print(f"File: {href_object.attrib['href']} not found! root_dir: {root_directory}")
+		return None
 	return objectify.fromstring(contents)
 
 
@@ -140,11 +144,12 @@ def copy_file_to_folder(file_system: VirtualFileSystemBaseClass, source: str, de
 
 class VisualObjectReader:
 
-	def __init__(self, system: VirtualFileSystemBaseClass, used_file_paths: set[str]=None):
+	def __init__(self, system: VirtualFileSystemBaseClass, used_file_paths: set[str]=None, logger: LoggerAbstract=None):
 		self.file_system = system
 		self.xml_object = None
 		self.root_directory = None
 		self.used_file_paths = used_file_paths
+		self.logger = logger
 		self.result: set[str] | None = None
 
 	def read_RPGStats(self, path, root_directory: str=None, export_unit_weapons: bool=False):
@@ -222,16 +227,21 @@ class VisualObjectReader:
 
 	def __read_object_graphics(self, model_reference, root_directory: str= ""):
 		if not href_file_exists(model_reference, self.file_system, root_directory):
+			if model_reference.attrib["href"]:
+				self.logger.print(f"Visual object file '{model_reference.attrib['href']}' not found! "
+								  f"root_directory: '{root_directory}'")
 			return
 		graphic_xml = href_read_xml_object(model_reference, self.file_system, root_directory)
 		root_directory = self.__update_root_directory(model_reference, root_directory)
 		for item in graphic_xml.Models.Item:
-			self.__read_model(item.Model, root_directory)
+			self.__read_model(item.Model, root_directory, item.Season.text)
 		self.__add_used_file_path(model_reference, root_directory)
 
 
-	def __read_model(self, vis_obj_reference, root_directory: str= ""):
+	def __read_model(self, vis_obj_reference, root_directory: str="", season:str=None):
 		if not href_file_exists(vis_obj_reference, self.file_system, root_directory):
+			self.logger.print(f"Model file '{vis_obj_reference.attrib['href']}' not found! "
+							  f"root_directory: '{root_directory}', season={season}")
 			return
 		model_xml = href_read_xml_object(vis_obj_reference, self.file_system, root_directory)
 		root_directory = self.__update_root_directory(vis_obj_reference, root_directory)
@@ -247,6 +257,8 @@ class VisualObjectReader:
 
 	def __read_material(self, material_reference, root_directory: str= ""):
 		if not href_file_exists(material_reference, self.file_system, root_directory):
+			self.logger.print(f"Material file '{material_reference.attrib['href']}' not found! "
+							  f"root_directory: '{root_directory}'")
 			return
 		material_xml = href_read_xml_object(material_reference, self.file_system, root_directory)
 		root_directory = self.__update_root_directory(material_reference, root_directory)
@@ -255,6 +267,8 @@ class VisualObjectReader:
 
 	def __read_texture(self, texture_reference, root_directory: str= ""):
 		if not href_file_exists(texture_reference, self.file_system, root_directory):
+			self.logger.print(f"Texture file '{texture_reference.attrib['href']}' not found! "
+							  f"root_directory: '{root_directory}'")
 			return
 		texture_xml = href_read_xml_object(texture_reference, self.file_system, root_directory)
 		root_directory = self.__update_root_directory(texture_reference, root_directory)
@@ -263,23 +277,36 @@ class VisualObjectReader:
 
 	def __read_geometry(self, geometry_reference, root_directory: str= ""):
 		if not href_file_exists(geometry_reference, self.file_system, root_directory):
+			self.logger.print(f"Geometry file '{geometry_reference.attrib['href']}' not found! "
+							  f"root_directory: '{root_directory}'")
 			return
 		geometry_xml = href_read_xml_object(geometry_reference, self.file_system, root_directory)
 		self.result.add(f"bin/geometries/{geometry_xml.uid}")
+		self.__add_used_file_path(geometry_reference, root_directory)
 		root_directory = self.__update_root_directory(geometry_reference, root_directory)
+		if not href_file_exists(geometry_xml.AIGeometry, self.file_system, root_directory):
+			self.logger.print(f"AIGeometry file '{geometry_xml.AIGeometry.attrib['href']}' not found! "
+							  f"root_directory: '{root_directory}'")
+			return
 		ai_geometry = href_read_xml_object(geometry_xml.AIGeometry, self.file_system, root_directory)
 		self.result.add(f"bin/aigeometries/{ai_geometry.uid}")
 		self.__add_used_file_path(geometry_xml.AIGeometry, root_directory)
-		self.__add_used_file_path(geometry_reference, root_directory)
+
 
 	def __read_skeleton(self, skeleton_reference, root_directory: str= ""):
 		if not href_file_exists(skeleton_reference, self.file_system, root_directory):
+			self.logger.print(f"Skeleton file '{skeleton_reference.attrib['href']}' not found! "
+							  f"root_directory: '{root_directory}'")
 			return
 		skeleton_xml = href_read_xml_object(skeleton_reference, self.file_system, root_directory)
 		root_directory = self.__update_root_directory(skeleton_reference, root_directory)
 		self.result.add(f"bin/skeletons/{skeleton_xml.uid}")
 		if hasattr(skeleton_xml.Animations, "Item"):
 			for item in skeleton_xml.Animations.Item:
+				if not href_file_exists(item, self.file_system, root_directory):
+					self.logger.print(f"Animation file '{item.attrib['href']}' not found! "
+									  f"root_directory: '{root_directory}'")
+					continue
 				animation_xml = href_read_xml_object(item, self.file_system, root_directory)
 				self.result.add(f"bin/animations/{animation_xml.uid}")
 				self.__add_used_file_path(item, root_directory)

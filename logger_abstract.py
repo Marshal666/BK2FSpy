@@ -10,3 +10,12 @@ class LoggerAbstract(ABC):
 	@abstractmethod
 	def print(self, content):
 		pass
+
+
+class NoneLogger(LoggerAbstract):
+
+	def __init__(self, *args):
+		pass
+
+	def print(self, content):
+		pass

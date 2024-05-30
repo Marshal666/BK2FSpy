@@ -43,8 +43,24 @@ def tuple_sum(a: tuple, b: tuple):
 	return tuple(ret)
 
 
+def tuple_add(a: tuple, b: tuple):
+	return tuple([a[i] + b[i] for i in range(len(a))])
+
+
+def tuple_sub(a: tuple, b: tuple):
+	return tuple([a[i] - b[i] for i in range(len(a))])
+
+
 def tuple_scalar_multiply(a: tuple, b: float):
 	ret = list(a)
 	for i in range(len(ret)):
 		ret[i] *= b
 	return tuple(ret)
+
+
+def tuple_average(tuples: list):
+	result = tuples[0]
+	for i in range(1, len(tuples)):
+		result = tuple_sum(result, tuples[i])
+	result = tuple_scalar_multiply(result, 1.0 / len(tuples))
+	return result

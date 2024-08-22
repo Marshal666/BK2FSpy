@@ -98,10 +98,17 @@ def main(args):
 
 	logger = ConsoleLogger()
 
-	folder = FolderSystem(path2)
+
+	if path2 is not None:
+		folder = FolderSystem(path2)
+		folder.add_directory(path1)
+	else:
+		folder = FolderSystem(path1)
+
 	fs = VirtualFileSystem(folder)
 	pk = PakLoader(path1, logger)
-	pk.open_directory(path2)
+	if path2 is not None:
+		pk.open_directory(path2)
 	fs.add_system(pk)
 
 	consts = bk2_xml_utils.load_xml_file(fs, "Consts/Test/Test_MultiplayerConsts.xdb")
@@ -135,6 +142,7 @@ def main(args):
 				units[t].append([])
 				bk2_map_xml_utils.add_reinf_type(map, reinf_ref.attrib["href"], 0)
 				reinf_content = bk2_xml_utils.href_get_binary_file_contents(reinf_ref, fs)
+				# print(f"Reinf content type: {type(reinf_content)}, path: {reinf_ref.attrib['href']}")
 				reinf = objectify.fromstring(reinf_content)
 				try:
 					reinf_items = reinf.Entries.Item
@@ -163,9 +171,9 @@ if __name__ == '__main__':
 		prog='All Used Units',
 		description="Genereates a list of all used units in separate map files."
 	)
-	parser.add_argument("datafolder")
-	parser.add_argument("modfolder")
-	parser.add_argument("mapfolder")
+	parser.add_argument("--datafolder")
+	parser.add_argument("-m", "--modfolder", default=None, type=str)
+	parser.add_argument("--mapfolder")
 
 	args = parser.parse_args()
 	main(args)

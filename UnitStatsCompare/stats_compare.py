@@ -7,9 +7,24 @@ import stats_compare_data as data
 
 
 def open_game_folders_command():
+
+	def open_game_folder_command():
+		
+		return
+
 	window = data.folders_pick = tk.Toplevel()
 	window.title('Open game folders')
-	window.geometry('400x400')
+	window.geometry('640x400')
+
+	tk.Label(window, text="Game folder: ").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+	game_folder_entry = tk.Entry(window, width=80)
+	game_folder_entry.grid(row=0, column=1, padx=5, pady=5, sticky=EW)
+	(tk.Button(window, text="...", width=5, command=open_game_folder_command)
+	 .grid(row=0, column=2, padx=5, pady=5, sticky=E))
+
+	window.grid_columnconfigure(1, weight=1)  # Makes the Entry widget's column stretchable
+	window.grid_columnconfigure(0, weight=0)  # Label column stays at its natural size
+	window.grid_columnconfigure(2, weight=0)  # Button column stays at its natural size
 
 	window.grab_set()  # Prevent interaction with the original window until this one is closed
 	window.focus_set()  # Give focus to the new window

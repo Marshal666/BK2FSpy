@@ -27,6 +27,11 @@ def enable_frame(frame):
 			widget.config(state='normal')
 
 
+def clear_frame_children(frame):
+	for widget in frame.winfo_children():
+		widget.destroy()
+
+
 def on_file_system_loaded():
 	reset_unit_frames(data.attacker_frame, data.comparison_frame, data.defender_frame, True)
 	return
@@ -113,26 +118,66 @@ def open_game_folders_command():
 	return
 
 
+def select_unit_command(frame: tk.Frame):
+
+	def option_selected_command(arg):
+
+		clear_frame_children(option_frame)
+
+		if arg == consts.UNIT_SELECT_OPTIONS[0]:
+			# From MP
+			tk.Label(option_frame, text="Select Nation: ").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+			pass
+		elif arg == consts.UNIT_SELECT_OPTIONS[1]:
+			# From files
+
+			pass
+		else:
+			messagebox.showerror("What the fuck did you select??", "bruh")
+
+		return
+
+	window = data.folders_pick = tk.Toplevel()
+	window.title('Open game folders')
+	window.geometry('640x320')
+	window.minsize(480, 220)
+
+	selected_option = tk.StringVar()
+	selected_option.set(consts.UNIT_SELECT_OPTIONS[0])
+
+	tk.Label(window, text="Where to get the unit from: ").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+
+	option_menu = tk.OptionMenu(window, selected_option, *consts.UNIT_SELECT_OPTIONS, command=option_selected_command)
+	option_menu.grid(row=0, column=1, padx=5, pady=5, sticky=W)
+
+	option_frame = tk.Frame(window, bd=2, relief=tk.SUNKEN)
+	option_frame.grid(row=1, column=0, padx=5, pady=5, columnspan=2, sticky=EW)
+
+	option_selected_command(selected_option.get())
+
+	window.columnconfigure(1, weight=1)
+
+	window.grab_set()  # Prevent interaction with the original window until this one is closed
+	window.focus_set()  # Give focus to the new window
+
+	return
+
+
 def quit_command():
 	data.root.quit()
 	return
 
 
-def select_unit_command():
-
-	return
-
-
 def init_unit_frame(frame: tk.Frame, title: str, unit: str = None):
 
-	for widget in frame.winfo_children():
-		widget.destroy()
+	clear_frame_children(frame)
 
 	frame.title = tk.Label(frame, text=title, width=15, font=("Arial", 24, "bold"))
 	frame.title.grid(row=0, column=0, padx=10, pady=5, sticky=EW)
 
 	if not unit or not unit.strip():
-		frame.get_unit_button = tk.Button(frame, text="Select unit...", command=select_unit_command, width=22)
+		frame.get_unit_button = (
+			tk.Button(frame, text="Select unit...", command=lambda: select_unit_command(frame), width=22))
 		frame.get_unit_button.grid(row=1, column=0, padx=15, pady=10)
 
 		disable_frame(frame)

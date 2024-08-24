@@ -1,0 +1,4 @@
+
+ATTACKER_FRAME_TITLE = "Attacker"
+
+DEFENDER_FRAME_TITLE = "Defender"

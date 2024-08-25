@@ -8,6 +8,7 @@ from console_logger import ConsoleLogger
 from folder_system import FolderSystem
 from pak_loader import PakLoader
 from virtual_file_system import VirtualFileSystem
+import game_data_loader
 
 
 def set_entry_text(entry: Entry, text: str):
@@ -126,21 +127,124 @@ def select_unit_command(frame: tk.Frame):
 
 		if arg == consts.UNIT_SELECT_OPTIONS[0]:
 			# From MP
+
+			def nation_pick_command(arg: StringVar):
+				update_reinfs_frame(reinf_pick_frame)
+				return
+
+			def tech_level_pick_command(arg: StringVar):
+				update_reinfs_frame(reinf_pick_frame)
+				return
+
+			def update_reinfs_frame(frame: tk.Frame):
+
+				def update_units_in_reinf(arg: StringVar):
+					update_units_frame(units_frame)
+					return
+
+				def update_units_frame(frame: tk.Frame):
+
+					def select_unit_button_command(index: int):
+						# TODO
+						return
+
+					clear_frame_children(frame)
+
+					unit_type = reinf_option.get()
+
+					units = game_data_loader.get_nation_reinf_units(data.file_system, nation_inx, tech_level_inx, unit_type)
+
+					if units is None or len(units) == 0:
+						tk.Label(frame, text="No units found").pack()
+						return
+
+					for index, unit in enumerate(units):
+						col = 0
+						icon = game_data_loader.get_unit_icon(data.file_system, unit[1])
+						if icon is not None:
+							img = tk.Label(frame, image=icon)
+							img.grid(row=index, column=col, padx=5, pady=5, sticky=W)
+							img.icon = icon
+							col += 1
+						(tk.Button(frame, text=f"unit{index}:", command=lambda: select_unit_button_command(index))
+						 .grid(row=index, column=col, padx=5, pady=5, sticky=W))
+						col += 1
+						tk.Label(frame, text=unit).grid(row=index, column=col, padx=5, pady=5, sticky=W)
+
+					return
+
+				clear_frame_children(frame)
+
+				nation_inx = nations.index(nation_option.get())
+				tech_level_inx = tech_levels.index(tech_level_option.get())
+
+				reinfs = game_data_loader.get_nation_reinfs(data.file_system, nation_inx, tech_level_inx)
+
+				if reinfs is None or len(reinfs) == 0:
+					tk.Label(frame, text="No reinfs found").pack()
+					return
+
+				tk.Label(frame, text="Reinf Type: ").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+
+				reinf_option = tk.StringVar()
+				reinf_option.set(reinfs[0])
+
+				reinf_options = tk.OptionMenu(frame, reinf_option, *reinfs, command=update_units_in_reinf)
+				reinf_options.grid(row=0, column=1, padx=5, pady=5, sticky=W)
+
+				units_frame = tk.Frame(frame)
+				units_frame.grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky=W)
+
+				update_units_frame(units_frame)
+
+				return
+
+			nations = game_data_loader.get_game_nations(data.file_system)
+			tech_levels = game_data_loader.get_game_tech_levels(data.file_system)
+
+			if nations is None:
+				tk.Label(option_frame, text="No Nations").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+				return
+
+			if tech_levels is None:
+				tk.Label(option_frame, text="No Tech Levels").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+				return
+
 			tk.Label(option_frame, text="Select Nation: ").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+
+			nation_option = tk.StringVar()
+			nation_option.set(nations[0])
+
+			nation_options = tk.OptionMenu(option_frame, nation_option, *nations, command=nation_pick_command)
+			nation_options.grid(row=0, column=1, padx=5, pady=5, sticky=W)
+
+			tk.Label(option_frame, text="Select Tech Level: ").grid(row=1, column=0, padx=5, pady=5, sticky=W)
+
+			tech_level_option = tk.StringVar()
+			tech_level_option.set(tech_levels[0])
+
+			tech_level_options = tk.OptionMenu(option_frame, tech_level_option, *tech_levels, command=tech_level_pick_command)
+			tech_level_options.grid(row=1, column=1, padx=5, pady=5, sticky=W)
+
+			reinf_pick_frame = tk.Frame(option_frame)
+			reinf_pick_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+
+			update_reinfs_frame(reinf_pick_frame)
+
 			pass
 		elif arg == consts.UNIT_SELECT_OPTIONS[1]:
 			# From files
 
 			pass
 		else:
-			messagebox.showerror("What the fuck did you select??", "bruh")
+			messagebox.showerror("What the fuck did you select??", "shit happened: bruh")
 
 		return
 
 	window = data.folders_pick = tk.Toplevel()
-	window.title('Open game folders')
-	window.geometry('640x320')
-	window.minsize(480, 220)
+	window.title('Pick a game unit')
+	window.geometry('800x500')
+	window.minsize(480, 270)
 
 	selected_option = tk.StringVar()
 	selected_option.set(consts.UNIT_SELECT_OPTIONS[0])

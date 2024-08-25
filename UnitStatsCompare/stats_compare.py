@@ -85,6 +85,7 @@ def open_game_folders_command():
 
 		window.destroy()
 		on_file_system_loaded()
+
 		messagebox.showinfo("Data Loaded", "Data was loaded successfully")
 		return
 
@@ -119,7 +120,7 @@ def open_game_folders_command():
 	return
 
 
-def select_unit_command(frame: tk.Frame):
+def select_unit_command(unit_frame: tk.Frame, title: str):
 
 	def option_selected_command(arg):
 
@@ -145,7 +146,14 @@ def select_unit_command(frame: tk.Frame):
 				def update_units_frame(frame: tk.Frame):
 
 					def select_unit_button_command(index: int):
-						# TODO
+
+						if units[index][0] != game_data_loader.MECH_UNIT_DEF:
+							messagebox.showwarning("Not supported", "Infantry is currently not supported.")
+							return
+
+						init_unit_frame(unit_frame, title, units[index][1])
+						window.destroy()
+
 						return
 
 					clear_frame_children(frame)
@@ -166,7 +174,8 @@ def select_unit_command(frame: tk.Frame):
 							img.grid(row=index, column=col, padx=5, pady=5, sticky=W)
 							img.icon = icon
 							col += 1
-						(tk.Button(frame, text=f"unit{index}:", command=lambda: select_unit_button_command(index))
+							i = int(index)
+						(tk.Button(frame, text=f"unit{index}:", command=lambda ix=i: select_unit_button_command(ix))
 						 .grid(row=index, column=col, padx=5, pady=5, sticky=W))
 						col += 1
 						tk.Label(frame, text=unit).grid(row=index, column=col, padx=5, pady=5, sticky=W)
@@ -190,10 +199,12 @@ def select_unit_command(frame: tk.Frame):
 				reinf_option.set(reinfs[0])
 
 				reinf_options = tk.OptionMenu(frame, reinf_option, *reinfs, command=update_units_in_reinf)
-				reinf_options.grid(row=0, column=1, padx=5, pady=5, sticky=W)
+				reinf_options.grid(row=0, column=1, padx=5, pady=5, sticky=E)
 
 				units_frame = tk.Frame(frame)
 				units_frame.grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky=W)
+
+				frame.columnconfigure(1, weight=1)
 
 				update_units_frame(units_frame)
 
@@ -216,7 +227,7 @@ def select_unit_command(frame: tk.Frame):
 			nation_option.set(nations[0])
 
 			nation_options = tk.OptionMenu(option_frame, nation_option, *nations, command=nation_pick_command)
-			nation_options.grid(row=0, column=1, padx=5, pady=5, sticky=W)
+			nation_options.grid(row=0, column=1, padx=5, pady=5, sticky=E)
 
 			tk.Label(option_frame, text="Select Tech Level: ").grid(row=1, column=0, padx=5, pady=5, sticky=W)
 
@@ -224,10 +235,12 @@ def select_unit_command(frame: tk.Frame):
 			tech_level_option.set(tech_levels[0])
 
 			tech_level_options = tk.OptionMenu(option_frame, tech_level_option, *tech_levels, command=tech_level_pick_command)
-			tech_level_options.grid(row=1, column=1, padx=5, pady=5, sticky=W)
+			tech_level_options.grid(row=1, column=1, padx=5, pady=5, sticky=E)
+
+			option_frame.columnconfigure(1, weight=1)
 
 			reinf_pick_frame = tk.Frame(option_frame)
-			reinf_pick_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+			reinf_pick_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky=EW)
 
 			update_reinfs_frame(reinf_pick_frame)
 
@@ -277,30 +290,92 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None):
 	clear_frame_children(frame)
 
 	frame.title = tk.Label(frame, text=title, width=15, font=("Arial", 24, "bold"))
-	frame.title.grid(row=0, column=0, padx=10, pady=5, sticky=EW)
+	frame.title.grid(row=0, column=0, padx=10, pady=5, sticky=EW, columnspan=2)
+
+	frame.get_unit_button = (
+		tk.Button(frame, text="Select unit...", command=lambda: select_unit_command(frame, title), width=22))
+	frame.get_unit_button.grid(row=1, column=0, padx=15, pady=10, columnspan=2)
+
+	frame.unit_path = None
 
 	if not unit or not unit.strip():
-		frame.get_unit_button = (
-			tk.Button(frame, text="Select unit...", command=lambda: select_unit_command(frame), width=22))
-		frame.get_unit_button.grid(row=1, column=0, padx=15, pady=10)
-
 		disable_frame(frame)
+		return
+
+	frame.unit_path = unit
+	frame.unit_stats = game_data_loader.get_unit_stats(data.file_system, unit)
+
+	frame.unit_icon = game_data_loader.get_unit_icon(data.file_system, unit)
+	frame.icon = tk.Label(frame, image=frame.unit_icon, width=48, height=48)
+	frame.icon.grid(row=1, column=0, padx=5, pady=5, columnspan=2)
+
+	frame.unit_name = tk.Label(frame, text=game_data_loader.get_unit_name(data.file_system, frame.unit_path))
+	frame.unit_name.grid(row=2, column=0, padx=5, pady=5, columnspan=2)
+
+	frame.get_unit_button.grid(row=3, column=0, padx=15, pady=10, columnspan=2)
+
+	max_hp_label = tk.Label(frame, text="MaxHP:")
+	max_hp_label.grid(row=4, column=0, padx=5, pady=5, sticky=W)
+
+	max_hp = tk.Label(frame, text=game_data_loader.get_hp_stats(frame.unit_stats))
+	max_hp.grid(row=4, column=1, padx=5, pady=5, sticky=E)
+
+	max_hp_label = tk.Label(frame, text="AABBCoef:")
+	max_hp_label.grid(row=5, column=0, padx=5, pady=5, sticky=W)
+
+	max_hp = tk.Label(frame, text=game_data_loader.get_aabb_coef(frame.unit_stats))
+	max_hp.grid(row=5, column=1, padx=5, pady=5, sticky=E)
+
+	max_hp_label = tk.Label(frame, text="AABB Half Size:")
+	max_hp_label.grid(row=6, column=0, padx=5, pady=5, sticky=W)
+
+	aabb_half = game_data_loader.get_aabb_half(frame.unit_stats)
+	max_hp = tk.Label(frame, text=f"x: {aabb_half[0]}, y: {aabb_half[1]}")
+	max_hp.grid(row=6, column=1, padx=5, pady=5, sticky=E)
+
+	frame.columnconfigure(0, weight=1)
+	frame.columnconfigure(1, weight=1)
 
 	return
 
 def init_comparison_frame(frame: tk.Frame):
 
-	data.comparison_frame.grid_columnconfigure(0, weight=1)
-	data.comparison_frame.grid(row=0, column=1, padx=5, pady=5, sticky=EW)
-	data.comparison_frame.title = tk.Label(data.comparison_frame, text="Comparison", font=("Arial", 24, "bold"),
-										   width=20)
-	data.comparison_frame.title.grid(row=0, column=0, padx=5, pady=0, sticky=EW)
+	def swap_command():
+
+		attacker_unit = None
+		defender_unit = None
+
+		if hasattr(data.attacker_frame, "unit_path"):
+			attacker_unit = data.attacker_frame.unit_path
+
+		if hasattr(data.defender_frame, "unit_path"):
+			defender_unit = data.defender_frame.unit_path
+
+		init_unit_frame(data.attacker_frame, consts.ATTACKER_FRAME_TITLE, defender_unit)
+		init_unit_frame(data.defender_frame, consts.DEFENDER_FRAME_TITLE, attacker_unit)
+
+		enable_frame(data.attacker_frame)
+		enable_frame(data.defender_frame)
+
+		init_comparison_frame(frame)
+
+		return
+
+	frame.grid_columnconfigure(0, weight=1)
+	frame.grid(row=0, column=1, padx=5, pady=5, sticky=EW)
+	frame.title = tk.Label(data.comparison_frame, text="Comparison", font=("Arial", 24, "bold"), width=20)
+	frame.title.grid(row=0, column=0, padx=5, pady=0, sticky=EW)
+
+	frame.switch_comparison_button = tk.Button(frame, text="<=Swap=>", width=16, command=swap_command)
+	frame.switch_comparison_button.grid(row=1, column=0, padx=5, pady=5)
 
 	return
 
 def reset_unit_frames(attacker_frame: tk.Frame, comparison_frame: tk.Frame, defender_frame: tk.Frame, enabled:bool):
 
 	init_comparison_frame(comparison_frame)
+	init_unit_frame(data.attacker_frame, consts.ATTACKER_FRAME_TITLE)
+	init_unit_frame(data.defender_frame, consts.DEFENDER_FRAME_TITLE)
 
 	if enabled:
 
@@ -309,9 +384,6 @@ def reset_unit_frames(attacker_frame: tk.Frame, comparison_frame: tk.Frame, defe
 		enable_frame(defender_frame)
 
 		return
-
-	init_unit_frame(data.attacker_frame, consts.ATTACKER_FRAME_TITLE)
-	init_unit_frame(data.defender_frame, consts.DEFENDER_FRAME_TITLE)
 
 	disable_frame(attacker_frame)
 	disable_frame(comparison_frame)

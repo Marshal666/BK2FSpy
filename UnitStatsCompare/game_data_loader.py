@@ -89,6 +89,10 @@ def get_nation_reinfs(file_system: VirtualFileSystemBaseClass, nation: int, tech
 
 	return ret
 
+
+MECH_UNIT_DEF = "MechUnit"
+SQUAD_UNIT_DEF = "Squad"
+
 def get_nation_reinf_units(file_system: VirtualFileSystemBaseClass, nation: int, tech_level: int, unit_type: str):
 	consts = bk2_xml_utils.load_xml_file(file_system, GAME_ROOT)
 
@@ -116,15 +120,20 @@ def get_nation_reinf_units(file_system: VirtualFileSystemBaseClass, nation: int,
 
 		for unit in reinfs_xml.Entries.Item:
 			if unit.MechUnit.attrib["href"]:
-				ret.append(("MechUnit", unit.MechUnit.attrib["href"]))
+				ret.append((MECH_UNIT_DEF, unit.MechUnit.attrib["href"]))
 				continue
 			if unit.Squad.attrib["href"]:
-				ret.append(("Squad", unit.Squad.attrib["href"]))
+				ret.append((SQUAD_UNIT_DEF, unit.Squad.attrib["href"]))
 				continue
 
 	ret = list(set(ret))
 
 	return ret
+
+def get_unit_stats(file_system: VirtualFileSystemBaseClass, unit_path: str):
+	unit_path = bk2_xml_utils.format_href(unit_path)
+	unit_stats = bk2_xml_utils.load_xml_file(file_system, unit_path)
+	return unit_stats
 
 def get_unit_icon(file_system: VirtualFileSystemBaseClass, unit_path: str):
 
@@ -152,3 +161,28 @@ def get_unit_icon(file_system: VirtualFileSystemBaseClass, unit_path: str):
 	photo = ImageTk.PhotoImage(tkimg)
 
 	return photo
+
+
+def get_unit_name(file_system: VirtualFileSystemBaseClass, unit_path: str):
+
+	unit_path = bk2_xml_utils.format_href(unit_path)
+
+	unit_stats = bk2_xml_utils.load_xml_file(file_system, unit_path)
+
+	if not hasattr(unit_stats, "LocalizedNameFileRef"):
+		return None
+
+	root_path = os.path.dirname(unit_path)
+
+	return bk2_xml_utils.href_get_file_contents(unit_stats.LocalizedNameFileRef, file_system, root_path)
+
+
+def get_hp_stats(unit_stats):
+	return float(unit_stats.MaxHP)
+
+
+def get_aabb_coef(unit_stats):
+	return float(unit_stats.SmallAABBCoeff)
+
+def get_aabb_half(unit_stats) -> tuple[float, float]:
+	return float(unit_stats.AABBHalfSize.x), float(unit_stats.AABBHalfSize.y)

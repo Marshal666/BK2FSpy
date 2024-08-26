@@ -1,7 +1,9 @@
 import os
 import tkinter as tk
 from tkinter import *
-from tkinter import ttk, filedialog, messagebox
+from tkinter import filedialog, messagebox
+from enum import Enum
+import bk2_xml_utils
 import consts
 import stats_compare_data as data
 from console_logger import ConsoleLogger
@@ -9,6 +11,23 @@ from folder_system import FolderSystem
 from pak_loader import PakLoader
 from virtual_file_system import VirtualFileSystem
 import game_data_loader
+import unit_comparer
+from unit_comparer import AttackDirection
+
+
+class RowBuilder:
+
+	def __init__(self, value: int=0):
+		self.__value = value
+
+	@property
+	def next(self):
+		self.__value += 1
+		return self.__value
+
+	@property
+	def current(self):
+		return self.__value
 
 
 def set_entry_text(entry: Entry, text: str):
@@ -285,16 +304,81 @@ def quit_command():
 	return
 
 
-def init_unit_frame(frame: tk.Frame, title: str, unit: str = None):
+def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weapon: StringVar = None):
+
+	def on_weapon_shell_changed_command(arg):
+		weapon_index = frame.weapon_names.index(arg)
+		weapons_frame = frame.weapons_frame
+		weapon_stats = frame.weapons_data.get_weapon_stats(weapon_index)
+		frame.shell_stats = shell_stats = frame.weapons_data.get_shell_stats(weapon_index)
+
+		clear_frame_children(weapons_frame)
+
+		row_builder = RowBuilder()
+
+		(tk.Label(weapons_frame, text=f"Weapon: {frame.weapon_names[weapon_index]}").
+		 grid(row=row_builder.current, column=0, padx=5, pady=5, columnspan=2))
+
+		tk.Label(weapons_frame, text="Dispersion: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		(tk.Label(weapons_frame, text=float(weapon_stats.Dispersion))
+		 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+
+		tk.Label(weapons_frame, text="Aim Time:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		(tk.Label(weapons_frame, text=float(weapon_stats.AimingTime))
+		 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+
+		(tk.Label(weapons_frame, text=f"Shell[{frame.weapons_data.get_shell_index(weapon_index)}]").
+		 grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2))
+
+		tk.Label(weapons_frame, text="Damage: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		(tk.Label(weapons_frame, text=f"{float(shell_stats.DamagePower)}±{float(shell_stats.DamageRandom)}").
+		 grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+		tk.Label(weapons_frame, text="").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		damage_min, damage_max = frame.weapons_data.get_shell_damage_min_max(weapon_index)
+		(tk.Label(weapons_frame, text=f"Min: {damage_min}, Max: {damage_max}")
+		 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+
+		tk.Label(weapons_frame, text="Piercing: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		(tk.Label(weapons_frame, text=f"{float(shell_stats.Piercing)}±{float(shell_stats.PiercingRandom)}").
+		 grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+		tk.Label(weapons_frame, text="").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		piercing_min, piercing_max = frame.weapons_data.get_shell_piercing_min_max(weapon_index)
+		(tk.Label(weapons_frame, text=f"Min: {piercing_min}, Max: {piercing_max}")
+		 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+
+		init_comparison_frame(data.comparison_frame)
+
+		return
+
+	def create_armors_labels(armors: list[tuple[float, float]]):
+
+		def format_min_max(value: tuple[float, float]) -> str:
+			return f"Min: {value[0]}, Max: {value[1]}, Avg: {(value[0] + value[1]) / 2.0}"
+
+		armors_str = AttackDirection.get_str_values()
+
+		armors_label = tk.Label(frame, text=f"Armor {armors_str[0]}: ")
+		armors_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		armor_label = tk.Label(frame, text=f"{format_min_max(armors[0])}")
+		armor_label.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+		for i, armor_side in enumerate(armors_str[1:]):
+			tk.Label(frame, text=f"Armor {armor_side}:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+			armor_label = tk.Label(frame, text=f"{format_min_max(armors[i+1])}")
+			armor_label.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+		return
 
 	clear_frame_children(frame)
 
+	row_builder = RowBuilder()
+
 	frame.title = tk.Label(frame, text=title, width=15, font=("Arial", 24, "bold"))
-	frame.title.grid(row=0, column=0, padx=10, pady=5, sticky=EW, columnspan=2)
+	frame.title.grid(row=row_builder.current, column=0, padx=10, pady=5, sticky=EW, columnspan=2)
 
 	frame.get_unit_button = (
 		tk.Button(frame, text="Select unit...", command=lambda: select_unit_command(frame, title), width=22))
-	frame.get_unit_button.grid(row=1, column=0, padx=15, pady=10, columnspan=2)
+	frame.get_unit_button.grid(row=row_builder.next, column=0, padx=15, pady=10, columnspan=2)
 
 	frame.unit_path = None
 
@@ -303,35 +387,58 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None):
 		return
 
 	frame.unit_path = unit
+	frame.unit_dir = os.path.dirname(bk2_xml_utils.format_href(unit))
 	frame.unit_stats = game_data_loader.get_unit_stats(data.file_system, unit)
 
 	frame.unit_icon = game_data_loader.get_unit_icon(data.file_system, unit)
 	frame.icon = tk.Label(frame, image=frame.unit_icon, width=48, height=48)
-	frame.icon.grid(row=1, column=0, padx=5, pady=5, columnspan=2)
+	frame.icon.grid(row=row_builder.current, column=0, padx=5, pady=5, columnspan=2)
 
 	frame.unit_name = tk.Label(frame, text=game_data_loader.get_unit_name(data.file_system, frame.unit_path))
-	frame.unit_name.grid(row=2, column=0, padx=5, pady=5, columnspan=2)
+	frame.unit_name.grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2)
 
-	frame.get_unit_button.grid(row=3, column=0, padx=15, pady=10, columnspan=2)
+	frame.get_unit_button.grid(row=row_builder.next, column=0, padx=15, pady=10, columnspan=2)
+
+	weapon_selection_row = row_builder.next
 
 	max_hp_label = tk.Label(frame, text="MaxHP:")
-	max_hp_label.grid(row=4, column=0, padx=5, pady=5, sticky=W)
+	max_hp_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 
 	max_hp = tk.Label(frame, text=game_data_loader.get_hp_stats(frame.unit_stats))
-	max_hp.grid(row=4, column=1, padx=5, pady=5, sticky=E)
+	max_hp.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
-	max_hp_label = tk.Label(frame, text="AABBCoef:")
-	max_hp_label.grid(row=5, column=0, padx=5, pady=5, sticky=W)
+	aabb_coef_label = tk.Label(frame, text="AABBCoef:")
+	aabb_coef_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	aabb_coef = tk.Label(frame, text=game_data_loader.get_aabb_coef(frame.unit_stats))
+	aabb_coef.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
-	max_hp = tk.Label(frame, text=game_data_loader.get_aabb_coef(frame.unit_stats))
-	max_hp.grid(row=5, column=1, padx=5, pady=5, sticky=E)
+	aabb_half_label = tk.Label(frame, text="AABB Half Size:")
+	aabb_half_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 
-	max_hp_label = tk.Label(frame, text="AABB Half Size:")
-	max_hp_label.grid(row=6, column=0, padx=5, pady=5, sticky=W)
+	aabb_half_value = game_data_loader.get_aabb_half(frame.unit_stats)
+	aabb_half = tk.Label(frame, text=f"x: {aabb_half_value[0]}, y: {aabb_half_value[1]}")
+	aabb_half.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
-	aabb_half = game_data_loader.get_aabb_half(frame.unit_stats)
-	max_hp = tk.Label(frame, text=f"x: {aabb_half[0]}, y: {aabb_half[1]}")
-	max_hp.grid(row=6, column=1, padx=5, pady=5, sticky=E)
+	frame.armors = armors_value = game_data_loader.get_unit_armors(frame.unit_stats)
+	create_armors_labels(armors_value)
+
+	frame.weapons_frame = tk.Frame(frame, bd=1)
+	frame.weapons_frame.grid(row=row_builder.next, column=0, padx=0, pady=5, columnspan=2)
+
+	frame.weapons_data = weapons_data = game_data_loader.UnitWeaponsData(data.file_system, frame.unit_stats, unit)
+	if weapons_data.weapon_count < 1:
+		tk.Label(frame, text="No weapons").grid(row=weapon_selection_row, column=0, padx=5, pady=5, columnspan=2)
+	else:
+		frame.selected_weapon = weapon_selection = StringVar() if selected_weapon is None else selected_weapon
+		frame.weapon_names = weapon_names = weapons_data.weapon_names
+		weapon = weapon_names[weapons_data.best_piercing_shell_index]
+		if selected_weapon is None:
+			weapon_selection.set(weapon)
+		tk.Label(frame, text="Weapon/Shell:").grid(row=weapon_selection_row, column=0, padx=5, pady=5, sticky=W)
+		frame.weapon_option = tk.OptionMenu(frame, weapon_selection, *weapon_names,
+											command=on_weapon_shell_changed_command)
+		frame.weapon_option.grid(row=weapon_selection_row, column=1, padx=5, pady=5, sticky=E)
+		on_weapon_shell_changed_command(weapon_selection.get())
 
 	frame.columnconfigure(0, weight=1)
 	frame.columnconfigure(1, weight=1)
@@ -351,8 +458,17 @@ def init_comparison_frame(frame: tk.Frame):
 		if hasattr(data.defender_frame, "unit_path"):
 			defender_unit = data.defender_frame.unit_path
 
-		init_unit_frame(data.attacker_frame, consts.ATTACKER_FRAME_TITLE, defender_unit)
-		init_unit_frame(data.defender_frame, consts.DEFENDER_FRAME_TITLE, attacker_unit)
+		attacker_weapon = None
+		defender_weapon = None
+
+		if hasattr(data.attacker_frame, "selected_weapon"):
+			attacker_weapon = data.attacker_frame.selected_weapon
+
+		if hasattr(data.defender_frame, "selected_weapon"):
+			defender_weapon = data.defender_frame.selected_weapon
+
+		init_unit_frame(data.attacker_frame, consts.ATTACKER_FRAME_TITLE, defender_unit, defender_weapon)
+		init_unit_frame(data.defender_frame, consts.DEFENDER_FRAME_TITLE, attacker_unit, attacker_weapon)
 
 		enable_frame(data.attacker_frame)
 		enable_frame(data.defender_frame)
@@ -361,13 +477,51 @@ def init_comparison_frame(frame: tk.Frame):
 
 		return
 
+	clear_frame_children(frame)
+
+	row_builder = RowBuilder()
+
 	frame.grid_columnconfigure(0, weight=1)
-	frame.grid(row=0, column=1, padx=5, pady=5, sticky=EW)
+	frame.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=N)
 	frame.title = tk.Label(data.comparison_frame, text="Comparison", font=("Arial", 24, "bold"), width=20)
-	frame.title.grid(row=0, column=0, padx=5, pady=0, sticky=EW)
+	frame.title.grid(row=row_builder.current, column=0, padx=5, pady=0, columnspan=2, sticky=EW)
 
 	frame.switch_comparison_button = tk.Button(frame, text="<=Swap=>", width=16, command=swap_command)
-	frame.switch_comparison_button.grid(row=1, column=0, padx=5, pady=5)
+	frame.switch_comparison_button.grid(row=row_builder.next, column=0, columnspan=2, padx=5, pady=5)
+
+	attacker = getattr(data.attacker_frame, "unit_path", None)
+	if attacker is None:
+		(tk.Label(frame, text="No attacker for comparison")
+		 .grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2))
+		return
+
+	defender = getattr(data.defender_frame, "unit_path", None)
+	if defender is None:
+		(tk.Label(frame, text="No defender for comparison")
+		 .grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2))
+		return
+
+	attack_directions = AttackDirection.get_str_values()
+	attack_direction = getattr(frame, "attack_direction", None)
+	if attack_direction is None:
+		frame.attack_direction = attack_direction = StringVar()
+		attack_direction.set(attack_directions[0])
+
+	attack_direction_label = tk.Label(frame, text="Attack Direction: ")
+	attack_direction_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	attack_direction_menu = tk.OptionMenu(frame, attack_direction, *attack_directions,
+										  command=lambda x: init_comparison_frame(frame))
+	attack_direction_menu.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+	piercing_probability_label = tk.Label(frame, text="Piercing Probability: ")
+	piercing_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	attacker_shell = data.attacker_frame.shell_stats
+	defender = data.defender_frame.unit_stats
+	side = AttackDirection[attack_direction.get()]
+	piercing_probability = unit_comparer.get_piercing_probability(attacker_shell, defender, side)
+	piercing = tk.Label(frame, text=f"{(piercing_probability*100):.2f}%")
+	piercing.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
 
 	return
 
@@ -395,7 +549,7 @@ def reset_unit_frames(attacker_frame: tk.Frame, comparison_frame: tk.Frame, defe
 def main():
 	root = data.root = Tk()
 	root.title('BK2 Unit Stats Compare')
-	root.geometry("1280x720")
+	root.geometry("1280x900")
 	root.minsize(800, 600)
 	root.iconbitmap("icon.ico")
 
@@ -408,11 +562,11 @@ def main():
 	data.menu_bar.add_cascade(label="File", menu=file_menu)
 
 	data.attacker_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)
-	data.attacker_frame.grid(row=0, column=0, padx=5, pady=5, sticky=W)
+	data.attacker_frame.grid(row=0, column=0, padx=5, pady=5, sticky=NW)
 	init_unit_frame(data.attacker_frame, consts.ATTACKER_FRAME_TITLE)
 
 	data.defender_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)
-	data.defender_frame.grid(row=0, column=2, padx=5, pady=5, sticky=E)
+	data.defender_frame.grid(row=0, column=2, padx=5, pady=5, sticky=NE)
 	init_unit_frame(data.defender_frame, consts.DEFENDER_FRAME_TITLE)
 
 	data.comparison_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)

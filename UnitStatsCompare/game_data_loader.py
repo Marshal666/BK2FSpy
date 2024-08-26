@@ -4,7 +4,7 @@ from virtual_file_system import VirtualFileSystemBaseClass
 import bk2_xml_utils
 import os
 from PIL import Image, ImageTk
-
+import re
 GAME_ROOT = "Consts/Game/GameContst_GameConsts.xdb"
 
 def get_game_nations(file_system: VirtualFileSystemBaseClass):
@@ -184,5 +184,110 @@ def get_hp_stats(unit_stats):
 def get_aabb_coef(unit_stats):
 	return float(unit_stats.SmallAABBCoeff)
 
+
 def get_aabb_half(unit_stats) -> tuple[float, float]:
 	return float(unit_stats.AABBHalfSize.x), float(unit_stats.AABBHalfSize.y)
+
+
+def get_unit_weapon_stats(file_system: VirtualFileSystemBaseClass, weapon_path: str, unit_path: str):
+	weapon_path = bk2_xml_utils.format_href(weapon_path)
+	unit_path = bk2_xml_utils.format_href(unit_path)
+	unit_path = os.path.dirname(unit_path)
+	if file_system.contains_file(os.path.join(unit_path, weapon_path)):
+		return bk2_xml_utils.load_xml_file(file_system, os.path.join(unit_path, weapon_path))
+	if file_system.contains_file(weapon_path):
+		return bk2_xml_utils.load_xml_file(file_system, weapon_path)
+	return None
+
+
+def get_unit_armors(unit_stats) -> list[tuple[float, float]]:
+	return [(float(item.Min), float(item.Max)) for item in unit_stats.armors.Item]
+
+
+class UnitWeaponsData:
+
+	@staticmethod
+	def __get_unit_weapons(unit_stats) -> list[list[str]]:
+		if not hasattr(unit_stats.platforms, "Item"):
+			return [[]]
+		ret = []
+		for platform in unit_stats.platforms.Item:
+			ret.append([])
+			if not hasattr(platform.guns, "Item"):
+				continue
+			for gun in platform.guns.Item:
+				if not gun.Weapon.attrib["href"] or not gun.Weapon.attrib["href"].strip():
+					continue
+				ret[-1].append(gun.Weapon.attrib["href"])
+		return ret
+
+	def __init__(self, file_system: VirtualFileSystemBaseClass, unit_stats, unit_path: str):
+		self.__weapons_array = UnitWeaponsData.__get_unit_weapons(unit_stats)
+		self.file_system = file_system
+
+		# list[(index:p->w->shell), weapon_path, weapon_name, weapon_stats, shell_stats]
+		self.weapons: list[tuple[tuple[int, int, int], str, str, object, object]] = []
+		for i, weapon_array in enumerate(self.__weapons_array):
+			for j, weapon in enumerate(weapon_array):
+				weapon_stats = get_unit_weapon_stats(file_system, weapon, unit_path)
+				if weapon_stats is None:
+					continue
+				if not hasattr(weapon_stats.shells, "Item"):
+					continue
+				weapon_path = bk2_xml_utils.format_href(weapon)
+				weapon_dir = os.path.dirname(weapon_path)
+				weapon_name = "<Missing Weapon Name>"
+				try:
+					weapon_name = bk2_xml_utils.href_get_file_contents(weapon_stats.LocalizedNameFileRef, file_system,
+																	   weapon_dir)
+				except Exception:
+					pass
+				for k, shell in enumerate(weapon_stats.shells.Item):
+					weapon_index = (i, j, k)
+					weapon_shell_name = f"p[{i}]->w[{j}]->shell[{k}]: {weapon_name}"
+					self.weapons.append((weapon_index, weapon_path, weapon_shell_name, weapon_stats, shell))
+
+	@property
+	def weapon_count(self):
+		return len(self.weapons)
+
+	@property
+	def weapon_names(self):
+		return [weapon[2] for weapon in self.weapons]
+
+	@property
+	def best_piercing_shell_index(self):
+		if self.weapon_count < 1:
+			return None
+		best_index = 0
+		current_piercing = (float(self.weapons[best_index][4].Piercing) +
+							float(self.weapons[best_index][4].PiercingRandom))
+		for i in range(1, self.weapon_count):
+			i_piercing = float(self.weapons[i][4].Piercing) + float(self.weapons[i][4].PiercingRandom)
+			if i_piercing > current_piercing:
+				best_index = i
+				current_piercing = i_piercing
+		return best_index
+
+	def get_weapon_stats(self, index: int):
+		return self.weapons[index][3]
+
+	def get_shell_stats(self, index: int):
+		return self.weapons[index][4]
+
+	def get_shell_index(self, weapon_index: int):
+		return self.weapons[weapon_index][0][2]
+
+	def get_shell_damage_min_max(self, index: int):
+		damage = float(self.weapons[index][4].DamagePower)
+		damage_random = float(self.weapons[index][4].DamageRandom)
+		min_damage = max(0, damage - damage_random)
+		max_damage = damage + damage_random
+		return min_damage, max_damage
+
+	def get_shell_piercing_min_max(self, index: int):
+		piercing = float(self.weapons[index][4].Piercing)
+		piercing_random = float(self.weapons[index][4].PiercingRandom)
+		min_piercing = max(0, piercing - piercing_random)
+		max_piercing = piercing + piercing_random
+		return min_piercing, max_piercing

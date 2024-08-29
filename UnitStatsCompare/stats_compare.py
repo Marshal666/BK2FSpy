@@ -52,6 +52,13 @@ def clear_frame_children(frame):
 		widget.destroy()
 
 
+def validate_integer_input(char):
+	if char.isdigit() or char == "":
+		return True
+	else:
+		return False
+
+
 def on_file_system_loaded():
 	reset_unit_frames(data.attacker_frame, data.comparison_frame, data.defender_frame, True)
 	return
@@ -445,6 +452,7 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 	return
 
+
 def init_comparison_frame(frame: tk.Frame):
 
 	def swap_command():
@@ -513,17 +521,44 @@ def init_comparison_frame(frame: tk.Frame):
 										  command=lambda x: init_comparison_frame(frame))
 	attack_direction_menu.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
-	piercing_probability_label = tk.Label(frame, text="Piercing Probability: ")
-	piercing_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 	attacker_shell = data.attacker_frame.shell_stats
+	attacker_weapon = data.attacker_frame.weapons_data.get_weapon_stats(data.attacker_frame.weapon_names.index(data.attacker_frame.selected_weapon.get()))
+	attacker = data.attacker_frame.unit_path
 	defender = data.defender_frame.unit_stats
 	side = AttackDirection[attack_direction.get()]
+
+	piercing_probability_label = tk.Label(frame, text="Piercing Probability: ")
+	piercing_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 	piercing_probability = unit_comparer.get_piercing_probability(attacker_shell, defender, side)
 	piercing = tk.Label(frame, text=f"{(piercing_probability*100):.2f}%")
 	piercing.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
+	tk.Label(frame, text="Attack direction: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	if not hasattr(frame, "dir_pick"):
+		frame.dir_pick = tk.IntVar(value=0)
+	dir_pick_slider = tk.Scale(frame, from_=0, to=65535, orient=tk.HORIZONTAL, variable=frame.dir_pick)
+	dir_pick_slider.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+	tk.Label(frame, text="Attack range: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	range_max = float(attacker_weapon.RangeMax)
+	if not hasattr(frame, "range_pick"):
+		frame.range_pick = tk.DoubleVar(value=range_max)
+	range_pick_slider = tk.Scale(frame, from_=0, to=range_max, orient=tk.HORIZONTAL, variable=frame.range_pick)
+	range_pick_slider.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+	hits, bounce_offs, misses = unit_comparer.get_aabb_hit_probability(attacker_weapon, defender, frame.range_pick.get(), frame.dir_pick.get())
+
+	tk.Label(frame, text="Hit probability (approx): ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(frame, text=f"{hits/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+	tk.Label(frame, text="Bounce off probability (approx): ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(frame, text=f"{bounce_offs/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+	tk.Label(frame, text="Miss probability (approx): ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(frame, text=f"{misses/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 	return
+
 
 def reset_unit_frames(attacker_frame: tk.Frame, comparison_frame: tk.Frame, defender_frame: tk.Frame, enabled:bool):
 
@@ -546,12 +581,77 @@ def reset_unit_frames(attacker_frame: tk.Frame, comparison_frame: tk.Frame, defe
 	return
 
 
+def open_simulation_config_command():
+
+	def on_iterations_edited(arg1, arg2, arg3):
+		# print(f"arg1: {arg1}, arg2: {arg2}, arg3: {arg3}, value: {data.simulation_iterations.get()}")
+
+		if not window.iters_input.get() or not window.iters_input.get().strip():
+			data.simulation_iterations.set(1)
+			window.iters_input.update()
+			return
+
+		#print(f"arg1: {arg1}, arg2: {arg2}, arg3: {arg3}, value: {data.simulation_iterations.get()}")
+
+		return
+
+	def on_rng_seed_edited(arg1, arg2, arg3):
+
+		if not window.rng_seed_input.get() or not window.rng_seed_input.get().strip():
+			data.simulation_rng_seed.set(0)
+			return
+
+		#print(f"arg1: {arg1}, arg2: {arg2}, arg3: {arg3}, value: {data.simulation_rng_seed.get()}")
+
+		return
+
+	def on_close(event):
+		data.simulation_iterations = tk.IntVar(value=data.simulation_iterations.get())
+		data.simulation_iterations.not_traced = True
+		data.simulation_rng_seed = tk.IntVar(value=data.simulation_rng_seed.get())
+		data.simulation_rng_seed.not_traced = True
+		return
+
+	if data.simulation_iterations.not_traced:
+		data.simulation_iterations.callback = data.simulation_iterations.trace_add("write", on_iterations_edited)
+	if data.simulation_rng_seed.not_traced:
+		data.simulation_rng_seed.callback = data.simulation_rng_seed.trace_add("write", on_rng_seed_edited)
+
+	row_builder = RowBuilder()
+
+	window = tk.Toplevel()
+	window.title('Edit simulation configuration')
+	window.geometry('320x120')
+	window.minsize(300, 100)
+	window.bind("<Destroy>", on_close)
+
+	validate_command = window.register(validate_integer_input)
+
+	tk.Label(window, text="Iteration count: ").grid(row=row_builder.current, column=0, padx=5, pady=5, sticky=W)
+	window.iters_input = tk.Entry(window, textvariable=data.simulation_iterations, validate="key", validatecommand=(validate_command, "%P"), width=15)
+	window.iters_input.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+	tk.Label(window, text="RNG seed: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	window.rng_seed_input = tk.Entry(window, textvariable=data.simulation_rng_seed, validate="key", validatecommand=(validate_command, "%P"), width=15)
+	window.rng_seed_input.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+	window.grab_set()  # Prevent interaction with the original window until this one is closed
+	window.focus_set()  # Give focus to the new window
+
+	return
+
+
 def main():
 	root = data.root = Tk()
 	root.title('BK2 Unit Stats Compare')
 	root.geometry("1280x900")
 	root.minsize(800, 600)
 	root.iconbitmap("icon.ico")
+
+	data.simulation_iterations = IntVar(value=10000)
+	data.simulation_iterations.not_traced = True
+	data.simulation_rng_seed = IntVar(value=1337)
+	data.simulation_rng_seed.not_traced = True
 
 	data.menu_bar = tk.Menu(root)
 
@@ -560,6 +660,10 @@ def main():
 	file_menu.add_separator()
 	file_menu.add_command(label="Quit", command=quit_command)
 	data.menu_bar.add_cascade(label="File", menu=file_menu)
+
+	config_menu = tk.Menu(data.menu_bar, tearoff=0)
+	config_menu.add_command(label="Simulation Config", command=open_simulation_config_command)
+	data.menu_bar.add_cascade(label="Config", menu=config_menu)
 
 	data.attacker_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)
 	data.attacker_frame.grid(row=0, column=0, padx=5, pady=5, sticky=NW)

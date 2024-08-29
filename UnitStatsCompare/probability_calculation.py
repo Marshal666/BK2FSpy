@@ -46,6 +46,7 @@ def get_hit_count(aabb_half_size: Vector2,
 				  aabb_coef: np.float32,
 				  dispersion: np.float32,
 				  tests: int) -> tuple[int, int, int]:
+
 	successes = 0
 	bounce_offs = 0
 	fails = 0

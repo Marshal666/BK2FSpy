@@ -12,3 +12,6 @@ menu_bar: tkinter.Menu = None
 attacker_frame: tkinter.Frame = None
 comparison_frame: tkinter.Frame = None
 defender_frame: tkinter.Frame = None
+
+simulation_iterations = tkinter.IntVar(value=100000)
+rng_seed = tkinter.IntVar(value=1337)

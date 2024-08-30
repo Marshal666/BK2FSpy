@@ -13,6 +13,7 @@ from virtual_file_system import VirtualFileSystem
 import game_data_loader
 import unit_comparer
 from unit_comparer import AttackDirection
+from idlelib.tooltip import Hovertip
 
 
 class RowBuilder:
@@ -515,7 +516,7 @@ def init_comparison_frame(frame: tk.Frame):
 		frame.attack_direction = attack_direction = StringVar()
 		attack_direction.set(attack_directions[0])
 
-	attack_direction_label = tk.Label(frame, text="Attack Direction: ")
+	attack_direction_label = tk.Label(frame, text="Attack Side: ")
 	attack_direction_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 	attack_direction_menu = tk.OptionMenu(frame, attack_direction, *attack_directions,
 										  command=lambda x: init_comparison_frame(frame))
@@ -529,6 +530,7 @@ def init_comparison_frame(frame: tk.Frame):
 
 	piercing_probability_label = tk.Label(frame, text="Piercing Probability: ")
 	piercing_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	Hovertip(piercing_probability_label, "The chance that attacker will pierce the defenders armor", hover_delay=400)
 	piercing_probability = unit_comparer.get_piercing_probability(attacker_shell, defender, side)
 	piercing = tk.Label(frame, text=f"{(piercing_probability*100):.2f}%")
 	piercing.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
@@ -548,13 +550,19 @@ def init_comparison_frame(frame: tk.Frame):
 
 	hits, bounce_offs, misses = unit_comparer.get_aabb_hit_probability(attacker_weapon, defender, frame.range_pick.get(), frame.dir_pick.get())
 
-	tk.Label(frame, text="Hit probability (approx): ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	hit_probability_label = tk.Label(frame, text="AABB Hit probability (approx): ")
+	hit_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	Hovertip(hit_probability_label, "The chance for attacker to properly hit defenders AABB (with AABBCoef)", hover_delay=400)
 	tk.Label(frame, text=f"{hits/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
-	tk.Label(frame, text="Bounce off probability (approx): ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	bounce_off_label = tk.Label(frame, text="AABB Bounce off probability (approx): ")
+	bounce_off_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	Hovertip(bounce_off_label, "The chance for defender to bounce off a shot at take no damage", hover_delay=400)
 	tk.Label(frame, text=f"{bounce_offs/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
-	tk.Label(frame, text="Miss probability (approx): ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	miss_probability_label = tk.Label(frame, text="AABB Miss probability (approx): ")
+	miss_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	Hovertip(miss_probability_label, "The chance that the attacker will completely miss the defender, area damage might still apply if close enough", hover_delay=400)
 	tk.Label(frame, text=f"{misses/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 	return
@@ -627,11 +635,15 @@ def open_simulation_config_command():
 
 	validate_command = window.register(validate_integer_input)
 
-	tk.Label(window, text="Iteration count: ").grid(row=row_builder.current, column=0, padx=5, pady=5, sticky=W)
+	iter_count_label = tk.Label(window, text="Iteration count: ")
+	iter_count_label.grid(row=row_builder.current, column=0, padx=5, pady=5, sticky=W)
+	Hovertip(iter_count_label, "The number of iterations for AABB hit probability calculation, the more the better", hover_delay=500)
 	window.iters_input = tk.Entry(window, textvariable=data.simulation_iterations, validate="key", validatecommand=(validate_command, "%P"), width=15)
 	window.iters_input.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
-	tk.Label(window, text="RNG seed: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	rng_seed_label = tk.Label(window, text="RNG seed: ")
+	rng_seed_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	Hovertip(rng_seed_label, "Seed for RNG for AABB hit probability calculation", hover_delay=500)
 	window.rng_seed_input = tk.Entry(window, textvariable=data.simulation_rng_seed, validate="key", validatecommand=(validate_command, "%P"), width=15)
 	window.rng_seed_input.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 

@@ -3,6 +3,7 @@ import numpy as np
 from SRect import SRect
 from Vector2 import Vector2
 import custom_random
+import aabb_hit_calc
 
 def piercing_probability(armor_min, armor_max, piercing, piercing_random):
 	# Calculate MinimumPiercing and MaximumPiercing
@@ -45,8 +46,10 @@ def get_hit_count(aabb_half_size: Vector2,
 				  dir: Vector2,
 				  aabb_coef: np.float32,
 				  dispersion: np.float32,
-				  tests: int) -> tuple[int, int, int]:
+				  tests: int,
+				  seed: int=1337) -> tuple[int, int, int]:
 
+	"""
 	successes = 0
 	bounce_offs = 0
 	fails = 0
@@ -65,7 +68,13 @@ def get_hit_count(aabb_half_size: Vector2,
 			continue
 		fails += 1
 
-	return successes, bounce_offs, fails
+	return successes, bounce_offs, fails"""
+
+	return aabb_hit_calc.get_hit_probabilities(tests, seed,
+											 aabb_half_size.x, aabb_half_size.y,
+											 aabb_center.x, aabb_center.y,
+											 dir.x, dir.y,
+											 aabb_coef, dispersion)
 
 """
 aabb_half_size = Vector2(40, 60)

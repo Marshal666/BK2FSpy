@@ -38,6 +38,6 @@ def get_aabb_hit_probability(attacker_gun, defender, range: float, attack_direct
 	iters = data.simulation_iterations.get()
 
 	rng_seed = data.simulation_rng_seed.get()
-	custom_random.init_seed(rng_seed)
+	#custom_random.init_seed(rng_seed)
 
-	return probability_calculation.get_hit_count(aabb_half_size, aabb_center, dir, aabb_coef, dispersion, iters)
+	return probability_calculation.get_hit_count(aabb_half_size, aabb_center, dir, aabb_coef, dispersion, iters, rng_seed)

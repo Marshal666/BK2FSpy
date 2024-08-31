@@ -110,9 +110,9 @@ def init_comparison_frame(frame: tk.Frame):
 		frame.range_pick = tk.DoubleVar(value=range_max)
 	else:
 		frame.range_pick = tk.DoubleVar(value=frame.range_pick.get())
-	range_pick_slider = tk.Scale(frame, from_=0, to=range_max, orient=tk.HORIZONTAL, variable=frame.range_pick, command=lambda x: init_comparison_frame(frame))
+	range_pick_slider = tk.Scale(frame, from_=range_min, to=range_max, orient=tk.HORIZONTAL, variable=frame.range_pick, command=lambda x: init_comparison_frame(frame))
 	#range_pick_slider = tk_utils.scaler_with_entry(frame, frame.range_pick, range_min, range_max, command=lambda: init_comparison_frame(frame))
-	range_pick_slider.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	range_pick_slider.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=EW)
 
 	hits, bounce_offs, misses = unit_comparer.get_aabb_hit_probability(attacker_weapon, defender, frame.range_pick.get(), frame.dir_pick.get())
 	hit_probability = hits/data.simulation_iterations.get()
@@ -132,7 +132,7 @@ def init_comparison_frame(frame: tk.Frame):
 	Hovertip(miss_probability_label, "The chance that the attacker will completely miss the defender, area damage might still apply if close enough", hover_delay=400)
 	tk.Label(frame, text=f"{misses/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
-	total_shot_chance_label = tk.Label(frame, text="Total shot chance: ")
+	total_shot_chance_label = tk.Label(frame, text="Overall shot chance: ", font=("Arial", 12, "bold"))
 	total_shot_chance_label.grid(row=chance_for_good_shot_row, column=0, padx=5, pady=5, sticky=W)
 	Hovertip(total_shot_chance_label, "Overall chance to get a good shot on defender", hover_delay=400)
 	total_chance = piercing_probability * hit_probability

@@ -200,7 +200,7 @@ def main():
 	root.minsize(800, 600)
 	root.iconbitmap("icon.ico")
 
-	data.simulation_iterations = IntVar(value=10000)
+	data.simulation_iterations = IntVar(value=100000)
 	data.simulation_iterations.not_traced = True
 	data.simulation_rng_seed = IntVar(value=1337)
 	data.simulation_rng_seed.not_traced = True

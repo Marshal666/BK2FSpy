@@ -34,7 +34,7 @@ def get_aabb_hit_probability(attacker_gun, defender, range: float, attack_direct
 	dispersion = np.float32(weapon_dispersion / weapon_max_range * range) * 32
 	aabb_half_size = Vector2(np.float32(defender.AABBHalfSize.x.text), np.float32(defender.AABBHalfSize.y.text))
 	aabb_center = Vector2(np.float32(defender.AABBCenter.x.text), np.float32(defender.AABBCenter.y.text))
-	aabb_coef = np.float32(defender.SmallAABBCoeff.text)
+	aabb_coef =  np.clip(np.float32(defender.SmallAABBCoeff.text), np.float32(0), np.float32(1))
 	iters = data.simulation_iterations.get()
 
 	rng_seed = data.simulation_rng_seed.get()

@@ -283,6 +283,9 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 			avg_armor = (min_armor + max_armor) / 2.0
 			label.config(text=f", Avg: {avg_armor}")
 
+		if not hasattr(frame, "weapon_names"):
+			return
+
 		# redraw weapon min max stuff
 		weapon_index = frame.weapon_names.index(frame.selected_weapon.get())
 		weapon_shell = frame.unit_stats.WeaponsShells[weapon_index]
@@ -292,6 +295,8 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 		piercing_min, piercing_max = weapon_shell.min_max_piercing
 		frame.weapon_min_max_piercing.config(text=f"Min: {piercing_min}, Max: {piercing_max}")
+
+		return
 
 
 	tk_utils.clear_frame_children(frame)
@@ -378,8 +383,6 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 											command=on_weapon_shell_changed_command)
 		frame.weapon_option.grid(row=weapon_selection_row, column=1, padx=5, pady=5, sticky=E)
 		on_weapon_shell_changed_command(weapon_selection.get())
-
-
 
 	frame.columnconfigure(0, weight=1)
 	frame.columnconfigure(1, weight=1)

@@ -94,7 +94,7 @@ def init_comparison_frame(frame: tk.Frame):
 	piercing_probability_label = tk.Label(frame, text="Piercing Probability: ")
 	piercing_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 	Hovertip(piercing_probability_label, "The chance that attacker will pierce the defenders armor", hover_delay=400)
-	piercing_probability = unit_comparer.get_piercing_probability(attacker_shell, defender, side)
+	piercing_probability = unit_comparer.get_piercing_probability(data.attacker_frame, data.defender_frame, side)
 	piercing = tk.Label(frame, text=f"{(piercing_probability*100):.2f}%")
 	piercing.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
@@ -115,7 +115,8 @@ def init_comparison_frame(frame: tk.Frame):
 	#range_pick_slider = tk_utils.scaler_with_entry(frame, frame.range_pick, range_min, range_max, command=lambda: init_comparison_frame(frame))
 	range_pick_slider.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=EW)
 
-	hits, bounce_offs, misses = unit_comparer.get_aabb_hit_probability(attacker_weapon, defender, frame.range_pick.get(), frame.dir_pick.get())
+	hits, bounce_offs, misses = unit_comparer.get_aabb_hit_probability(data.attacker_frame, data.defender_frame,
+																	   frame.range_pick.get(), frame.dir_pick.get())
 	hit_probability = hits/data.simulation_iterations.get()
 
 	hit_probability_label = tk.Label(frame, text="AABB Hit probability (approx): ")

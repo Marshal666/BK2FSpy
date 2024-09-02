@@ -4,6 +4,8 @@ from virtual_file_system import VirtualFileSystemBaseClass
 import bk2_xml_utils
 import os
 from PIL import Image, ImageTk
+from Vector2 import Vector2
+
 GAME_ROOT = "Consts/Game/GameContst_GameConsts.xdb"
 
 def get_game_nations(file_system: VirtualFileSystemBaseClass):
@@ -470,6 +472,18 @@ class UnitStats:
 		self.WeaponsData = None
 		self.WeaponsShells: list[UnitStats.WeaponShellStats] = []
 		self.Armors = [[tk.DoubleVar(), tk.DoubleVar()] for _ in range(6)]
+
+	@property
+	def armors_float_array(self):
+		return [(element[0].get(), element[1].get()) for element in self.Armors]
+
+	@property
+	def aabb_center(self) -> Vector2:
+		return Vector2(self.AABBCenter_x.get(), self.AABBCenter_y.get())
+
+	@property
+	def aabb_half_size(self) -> Vector2:
+		return Vector2(self.AABBHalfSize_x.get(), self.AABBHalfSize_y.get())
 
 	def load_from_xml_object(self, xml_object, file_system: VirtualFileSystemBaseClass, on_edit_command,
 							 unit_path:str=""):

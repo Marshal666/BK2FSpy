@@ -4,6 +4,7 @@ from tkinter import *
 import consts
 import tk_utils
 from UnitStatsCompare import unit_comparer
+from UnitStatsCompare.game_data_loader import UnitStats
 from UnitStatsCompare.unit_comparer import AttackDirection
 from tk_utils import RowBuilder
 from idlelib.tooltip import Hovertip
@@ -85,10 +86,9 @@ def init_comparison_frame(frame: tk.Frame):
 										  command=lambda x: init_comparison_frame(frame))
 	attack_direction_menu.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
-	attacker_shell = data.attacker_frame.shell_stats
 	attacker_weapon = data.attacker_frame.weapons_data.get_weapon_stats(data.attacker_frame.weapon_names.index(data.attacker_frame.selected_weapon.get()))
-	attacker = data.attacker_frame.unit_path
-	defender = data.defender_frame.unit_stats_xml
+	weapon_index = data.attacker_frame.weapon_names.index(data.attacker_frame.selected_weapon.get())
+	attacker_weapon_shell : UnitStats.WeaponShellStats = data.attacker_frame.unit_stats.WeaponsShells[weapon_index]
 	side = AttackDirection[attack_direction.get()]
 
 	piercing_probability_label = tk.Label(frame, text="Piercing Probability: ")
@@ -105,8 +105,7 @@ def init_comparison_frame(frame: tk.Frame):
 	dir_pick_slider.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 	tk.Label(frame, text="Attack range: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-	range_min = float(attacker_weapon.RangeMin)
-	range_max = float(attacker_weapon.RangeMax)
+	range_min, range_max = attacker_weapon_shell.range_min_max
 	if not hasattr(frame, "range_pick"):
 		frame.range_pick = tk.DoubleVar(value=range_max)
 	else:

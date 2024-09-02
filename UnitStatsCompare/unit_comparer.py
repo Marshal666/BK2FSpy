@@ -24,8 +24,8 @@ def get_piercing_probability(attacker_frame, defender_frame, attack_direction: A
 	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
 	weapon_shell : UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
 
-	armors = defender_frame.unit_stats.armors_float_array[attack_direction.value]
 	try:
+		armors = defender_frame.unit_stats.armors_float_array[attack_direction.value]
 		piercing = weapon_shell.Piercing.get()
 		piercing_random = weapon_shell.PiercingRandom.get()
 	except Exception:

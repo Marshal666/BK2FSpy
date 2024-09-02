@@ -409,6 +409,13 @@ class UnitStats:
 				return float("NaN"), float("NaN")
 			return min_piercing, max_piercing
 
+		@property
+		def range_min_max(self):
+			try:
+				return self.RangeMin.get(), self.RangeMax.get()
+			except Exception:
+				return 0.0, 40.0
+
 		@staticmethod
 		def from_xml_weapon_object(xml_weapon_object, shell_index: int, weapon_path: str, on_edit_command):
 

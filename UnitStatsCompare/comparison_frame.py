@@ -43,10 +43,11 @@ def init_comparison_frame(frame: tk.Frame):
 
 	tk_utils.clear_frame_children(frame)
 
+	frame.grid_columnconfigure(0, weight=1)
+	frame.grid(row=0, column=1, padx=5, pady=5, sticky=N+EW)
+
 	row_builder = RowBuilder()
 
-	frame.grid_columnconfigure(0, weight=1)
-	frame.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=N)
 	frame.title = tk.Label(data.comparison_frame, text="Comparison", font=("Arial", 24, "bold"), width=20)
 	frame.title.grid(row=row_builder.current, column=0, padx=5, pady=0, columnspan=2, sticky=EW)
 
@@ -87,7 +88,7 @@ def init_comparison_frame(frame: tk.Frame):
 	attacker_shell = data.attacker_frame.shell_stats
 	attacker_weapon = data.attacker_frame.weapons_data.get_weapon_stats(data.attacker_frame.weapon_names.index(data.attacker_frame.selected_weapon.get()))
 	attacker = data.attacker_frame.unit_path
-	defender = data.defender_frame.unit_stats
+	defender = data.defender_frame.unit_stats_xml
 	side = AttackDirection[attack_direction.get()]
 
 	piercing_probability_label = tk.Label(frame, text="Piercing Probability: ")

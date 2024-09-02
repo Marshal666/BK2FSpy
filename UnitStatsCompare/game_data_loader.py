@@ -1,10 +1,9 @@
 import io
-
+import tkinter as tk
 from virtual_file_system import VirtualFileSystemBaseClass
 import bk2_xml_utils
 import os
 from PIL import Image, ImageTk
-import re
 GAME_ROOT = "Consts/Game/GameContst_GameConsts.xdb"
 
 def get_game_nations(file_system: VirtualFileSystemBaseClass):
@@ -90,8 +89,10 @@ def get_nation_reinfs(file_system: VirtualFileSystemBaseClass, nation: int, tech
 	return ret
 
 
+
 MECH_UNIT_DEF = "MechUnit"
 SQUAD_UNIT_DEF = "Squad"
+
 
 def get_nation_reinf_units(file_system: VirtualFileSystemBaseClass, nation: int, tech_level: int, unit_type: str):
 	consts = bk2_xml_utils.load_xml_file(file_system, GAME_ROOT)
@@ -130,10 +131,12 @@ def get_nation_reinf_units(file_system: VirtualFileSystemBaseClass, nation: int,
 
 	return ret
 
-def get_unit_stats(file_system: VirtualFileSystemBaseClass, unit_path: str):
+
+def get_unit_xml_stats(file_system: VirtualFileSystemBaseClass, unit_path: str):
 	unit_path = bk2_xml_utils.format_href(unit_path)
 	unit_stats = bk2_xml_utils.load_xml_file(file_system, unit_path)
 	return unit_stats
+
 
 def get_unit_icon(file_system: VirtualFileSystemBaseClass, unit_path: str):
 
@@ -202,6 +205,78 @@ def get_unit_weapon_stats(file_system: VirtualFileSystemBaseClass, weapon_path: 
 
 def get_unit_armors(unit_stats) -> list[tuple[float, float]]:
 	return [(float(item.Min), float(item.Max)) for item in unit_stats.armors.Item]
+
+
+class StatsBonuses:
+
+
+	class StatsBonus:
+
+		def __init__(self):
+			self.add_bonus = 0.0
+			self.mult_bonus = 1.0
+			self.zero_count = 0.0
+
+		@staticmethod
+		def from_xml_object(obj):
+			ret = StatsBonuses.StatsBonus()
+			ret.add_bonus = float(obj.AddBonus)
+			ret.mult_bonus = float(obj.MultBonus)
+			ret.zero_count = float(obj.ZeroCount)
+			return ret
+
+		def __add__(self, other):
+			ret = StatsBonuses.StatsBonus()
+			ret.add_bonus = self.add_bonus + other.add_bonus
+			ret.mult_bonus = self.mult_bonus + other.mult_bonus
+			ret.zero_count = self.zero_count + other.zero_count
+			return ret
+
+	PROPERTIES = [	"Durability",
+					"SmallAABBCoeff",
+					"Camouflage",
+					"SightPower",
+					"SightRange",
+					"Speed",
+					"RotateSpeed",
+					"WeaponDispersion",
+					"WeaponDamage",
+					"WeaponPiercing",
+					"WeaponTrackDamageProb",
+					"WeaponRelaxTime",
+					"WeaponAimTime",
+					"WeaponShellSpeed",
+					"WeaponArea",
+					"WeaponArea2",
+					"Cover"
+				]
+
+	def __init__(self):
+		for p in StatsBonuses.PROPERTIES:
+			setattr(self, p, StatsBonuses.StatsBonus())
+
+	def __add__(self, other):
+		ret = StatsBonuses()
+		for p in StatsBonuses.PROPERTIES:
+			s1 = getattr(self, p, StatsBonuses.StatsBonus())
+			s2 = getattr(other, p, StatsBonuses.StatsBonus())
+			ret.add_bonus = s1.add_bonus + s2.add_bonus
+		return ret
+
+	@staticmethod
+	def from_xml_file(obj):
+		ret = StatsBonuses()
+		for p in StatsBonuses.PROPERTIES:
+			bonuses = getattr(obj, p, StatsBonuses.StatsBonus())
+			if not isinstance(bonuses, StatsBonuses.StatsBonus):
+				bonuses = StatsBonuses.StatsBonus.from_xml_object(bonuses)
+			setattr(ret, p, bonuses)
+		return
+
+
+def get_stats_bonuses(file_system: VirtualFileSystemBaseClass, stats_href, root_path: str):
+	bonus_xml = bk2_xml_utils.href_read_xml_object(stats_href, file_system, root_path)
+	return StatsBonuses.from_xml_file(bonus_xml)
 
 
 class UnitWeaponsData:
@@ -291,3 +366,161 @@ class UnitWeaponsData:
 		min_piercing = max(0, piercing - piercing_random)
 		max_piercing = piercing + piercing_random
 		return min_piercing, max_piercing
+
+
+class UnitStats:
+
+	class WeaponShellStats:
+
+		def __init__(self):
+			self.weapon_path = ""
+			self.Dispersion = tk.DoubleVar()
+			self.AimingTime = tk.DoubleVar()
+			self.RangeMax = tk.DoubleVar()
+			self.RangeMin = tk.DoubleVar()
+			self.Ceiling = tk.DoubleVar()
+
+			self.Piercing = tk.DoubleVar()
+			self.PiercingRandom = tk.DoubleVar()
+			self.DamagePower = tk.DoubleVar()
+			self.DamageRandom = tk.DoubleVar()
+			self.Area = tk.DoubleVar()
+			self.Area2 = tk.DoubleVar()
+			self.FireRate = tk.DoubleVar()
+			self.RelaxTime = tk.DoubleVar()
+
+		@property
+		def min_max_damage(self):
+			try:
+				min_dmg = max(0.0, self.DamagePower.get() - self.DamageRandom.get())
+				max_dmg = self.DamagePower.get() + self.DamageRandom.get()
+			except Exception:
+				return float("NaN"), float("NaN")
+			return min_dmg, max_dmg
+
+		@property
+		def min_max_piercing(self):
+			try:
+				min_piercing = max(0.0, self.Piercing.get() - self.PiercingRandom.get())
+				max_piercing = self.Piercing.get() + self.PiercingRandom.get()
+			except Exception:
+				return float("NaN"), float("NaN")
+			return min_piercing, max_piercing
+
+		@staticmethod
+		def from_xml_weapon_object(xml_weapon_object, shell_index: int, weapon_path: str, on_edit_command):
+
+			ret = UnitStats.WeaponShellStats()
+
+			ret.weapon_path = weapon_path
+
+			ret.Dispersion.set(float(xml_weapon_object.Dispersion))
+			ret.Dispersion.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.AimingTime.set(float(xml_weapon_object.AimingTime))
+			ret.AimingTime.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.RangeMax.set(float(xml_weapon_object.RangeMax))
+			ret.RangeMax.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.RangeMin.set(float(xml_weapon_object.RangeMin))
+			ret.RangeMin.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.Ceiling.set(float(xml_weapon_object.Ceiling))
+			ret.Ceiling.trace_add("write", lambda x, y, z: on_edit_command())
+
+			shell = xml_weapon_object.shells.Item[shell_index]
+			ret.Piercing.set(float(shell.Piercing))
+			ret.Piercing.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.PiercingRandom.set(float(shell.PiercingRandom))
+			ret.PiercingRandom.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.DamagePower.set(float(shell.DamagePower))
+			ret.DamagePower.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.DamageRandom.set(float(shell.DamageRandom))
+			ret.DamageRandom.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.Area.set(float(shell.Area))
+			ret.Area.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.Area2.set(float(shell.Area2))
+			ret.Area2.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.FireRate.set(float(shell.FireRate))
+			ret.FireRate.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.RelaxTime.set(float(shell.RelaxTime))
+			ret.RelaxTime.trace_add("write", lambda x, y, z: on_edit_command())
+
+			return ret
+
+
+
+	def __init__(self):
+		self.unit_path = ""
+		self.MaxHP = tk.DoubleVar()
+		self.Sight = tk.DoubleVar()
+		self.AABBCenter_x = tk.DoubleVar()
+		self.AABBCenter_y = tk.DoubleVar()
+		self.AABBHalfSize_x = tk.DoubleVar()
+		self.AABBHalfSize_y = tk.DoubleVar()
+		self.SmallAABBCoeff = tk.DoubleVar()
+		self.WeaponsData = None
+		self.WeaponsShells: list[UnitStats.WeaponShellStats] = []
+		self.Armors = [[tk.DoubleVar(), tk.DoubleVar()] for _ in range(6)]
+
+	def load_from_xml_object(self, xml_object, file_system: VirtualFileSystemBaseClass, on_edit_command,
+							 unit_path:str=""):
+		ret = self
+
+		ret.unit_path = unit_path
+
+		ret.MaxHP.set(float(xml_object.MaxHP))
+		ret.MaxHP.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.Sight.set(float(xml_object.Sight))
+		ret.Sight.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.AABBCenter_x.set(float(xml_object.AABBCenter.x))
+		ret.AABBCenter_x.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.AABBCenter_y.set(float(xml_object.AABBCenter.y))
+		ret.AABBCenter_y.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.AABBHalfSize_x.set(float(xml_object.AABBHalfSize.x))
+		ret.AABBHalfSize_x.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.AABBHalfSize_y.set(float(xml_object.AABBHalfSize.y))
+		ret.AABBHalfSize_y.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.SmallAABBCoeff.set(float(xml_object.SmallAABBCoeff))
+		ret.SmallAABBCoeff.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.WeaponsData = UnitWeaponsData(file_system, xml_object, unit_path)
+
+		for i in range(ret.WeaponsData.weapon_count):
+			shell_index = ret.WeaponsData.weapons[i][0][2]
+			weapon_stats = ret.WeaponsData.weapons[i][3]
+			weapon_path = ret.WeaponsData.weapons[i][1]
+			ret.WeaponsShells.append(
+				UnitStats.WeaponShellStats.from_xml_weapon_object(weapon_stats, shell_index, weapon_path,
+																  on_edit_command))
+
+		for i in range(len(ret.Armors)):
+			armor_min = float(xml_object.armors.Item[i].Min)
+			armor_max = float(xml_object.armors.Item[i].Max)
+
+			ret.Armors[i][0].set(armor_min)
+			ret.Armors[i][0].trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.Armors[i][1].set(armor_max)
+			ret.Armors[i][1].trace_add("write", lambda x, y, z: on_edit_command())
+
+	@staticmethod
+	def from_xml_object(xml_object, file_system: VirtualFileSystemBaseClass, on_edit_command, unit_path:str=""):
+
+		ret = UnitStats()
+		ret.load_from_xml_object(xml_object, file_system, on_edit_command, unit_path)
+		return ret

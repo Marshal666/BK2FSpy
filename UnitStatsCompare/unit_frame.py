@@ -8,8 +8,11 @@ import tk_utils
 import comparison_frame
 import os
 import game_data_loader
+from game_data_loader import StatsBonuses
 import stats_compare_data as data
+from virtual_file_system_abstract import VirtualFileSystemBaseClass
 import consts
+
 
 def select_unit_command(unit_frame: tk.Frame, title: str):
 
@@ -171,6 +174,7 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 
 	return
 
+
 def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weapon: StringVar = None):
 
 	def on_weapon_shell_changed_command(arg):
@@ -178,6 +182,7 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		weapons_frame = frame.weapons_frame
 		weapon_stats = frame.weapons_data.get_weapon_stats(weapon_index)
 		frame.shell_stats = shell_stats = frame.weapons_data.get_shell_stats(weapon_index)
+		weapon_shell = frame.unit_stats.WeaponsShells[weapon_index]
 
 		tk_utils.clear_frame_children(weapons_frame)
 
@@ -187,35 +192,48 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		 grid(row=row_builder.current, column=0, padx=5, pady=5, columnspan=2))
 
 		tk.Label(weapons_frame, text="Dispersion: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-		(tk.Label(weapons_frame, text=float(weapon_stats.Dispersion))
-		 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+		weapon_dispersion = tk_utils.create_float_entry(weapons_frame, weapon_shell.Dispersion, width=7)
+		weapon_dispersion.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 		tk.Label(weapons_frame, text="Range: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-		(tk.Label(weapons_frame, text=f"Min: {float(weapon_stats.RangeMin)}, Max: {float(weapon_stats.RangeMax)}")
-		 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+		weapon_ranges = tk_utils.create_2x_float_entry(weapons_frame, weapon_shell.RangeMin, weapon_shell.RangeMax,
+													   "Min: ", ", Max:", width1=5, width2=5)
+		weapon_ranges.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 		tk.Label(weapons_frame, text="Aim Time:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-		(tk.Label(weapons_frame, text=float(weapon_stats.AimingTime))
-		 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+
+		aim_time = tk_utils.create_float_entry(weapons_frame, weapon_shell.AimingTime, width=7)
+		aim_time.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 		(tk.Label(weapons_frame, text=f"Shell[{frame.weapons_data.get_shell_index(weapon_index)}]").
 		 grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2))
 
 		tk.Label(weapons_frame, text="Damage: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-		(tk.Label(weapons_frame, text=f"{float(shell_stats.DamagePower)}±{float(shell_stats.DamageRandom)}").
-		 grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+		weapon_damages = tk_utils.create_2x_float_entry(weapons_frame,
+														weapon_shell.DamagePower,
+														weapon_shell.DamageRandom,
+														"", "±", "", width1=6, width2=6)
+		weapon_damages.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
 		tk.Label(weapons_frame, text="").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-		damage_min, damage_max = frame.weapons_data.get_shell_damage_min_max(weapon_index)
-		(tk.Label(weapons_frame, text=f"Min: {damage_min}, Max: {damage_max}")
-		 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+		damage_min, damage_max = weapon_shell.min_max_damage
+		weapon_min_max_damage = tk.Label(weapons_frame, text=f"Min: {damage_min}, Max: {damage_max}")
+		frame.weapon_min_max_damage = weapon_min_max_damage
+		weapon_min_max_damage.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 		tk.Label(weapons_frame, text="Piercing: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-		(tk.Label(weapons_frame, text=f"{float(shell_stats.Piercing)}±{float(shell_stats.PiercingRandom)}").
-		 grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+
+		weapon_piercings = tk_utils.create_2x_float_entry(weapons_frame,
+														  weapon_shell.Piercing,
+														  weapon_shell.PiercingRandom,
+														  "", "±", "", width1=6, width2=6)
+		weapon_piercings.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
 		tk.Label(weapons_frame, text="").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-		piercing_min, piercing_max = frame.weapons_data.get_shell_piercing_min_max(weapon_index)
-		(tk.Label(weapons_frame, text=f"Min: {piercing_min}, Max: {piercing_max}")
-		 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+		piercing_min, piercing_max = weapon_shell.min_max_piercing
+		weapon_min_max_piercing = tk.Label(weapons_frame, text=f"Min: {piercing_min}, Max: {piercing_max}")
+		frame.weapon_min_max_piercing = weapon_min_max_piercing
+		weapon_min_max_piercing.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 		comparison_frame.init_comparison_frame(data.comparison_frame)
 
@@ -228,17 +246,53 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 		armors_str = AttackDirection.get_str_values()
 
+		frame.avg_armor_labels = []
+
 		armors_label = tk.Label(frame, text=f"Armor {armors_str[0]}: ")
 		armors_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-		armor_label = tk.Label(frame, text=f"{format_min_max(armors[0])}")
+		# armor_label = tk.Label(frame, text=f"{format_min_max(armors[0])}")
+		min_armor = frame.unit_stats.Armors[0][0]
+		max_armor = frame.unit_stats.Armors[0][1]
+		avg_armor = (min_armor.get() + max_armor.get()) / 2.0
+		armor_label = tk_utils.create_2x_float_entry(frame, min_armor, max_armor, "Min: ", ", Max: ", f", Avg: {avg_armor}", 7, 7)
 		armor_label.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+		frame.avg_armor_labels.append(armor_label.children["!label3"])
 
 		for i, armor_side in enumerate(armors_str[1:]):
 			tk.Label(frame, text=f"Armor {armor_side}:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-			armor_label = tk.Label(frame, text=f"{format_min_max(armors[i+1])}")
+			min_armor = frame.unit_stats.Armors[i+1][0]
+			max_armor = frame.unit_stats.Armors[i+1][1]
+			avg_armor = (min_armor.get() + max_armor.get()) / 2.0
+			armor_label = tk_utils.create_2x_float_entry(frame, min_armor, max_armor, "Min: ", ", Max: ", f", Avg: {avg_armor}", 7, 7)
 			armor_label.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+			frame.avg_armor_labels.append(armor_label.children["!label3"])
 
 		return
+
+	def redraw_frames():
+		comparison_frame.init_comparison_frame(data.comparison_frame)
+		# init_unit_frame(frame, title, unit, selected_weapon, True)
+
+		# redraw avg armor labels
+		for i, label in enumerate(frame.avg_armor_labels):
+			try :
+				min_armor = frame.unit_stats.Armors[i][0].get()
+				max_armor = frame.unit_stats.Armors[i][1].get()
+			except Exception as e:
+				break
+			avg_armor = (min_armor + max_armor) / 2.0
+			label.config(text=f", Avg: {avg_armor}")
+
+		# redraw weapon min max stuff
+		weapon_index = frame.weapon_names.index(frame.selected_weapon.get())
+		weapon_shell = frame.unit_stats.WeaponsShells[weapon_index]
+
+		damage_min, damage_max = weapon_shell.min_max_damage
+		frame.weapon_min_max_damage.config(text=f"Min: {damage_min}, Max: {damage_max}")
+
+		piercing_min, piercing_max = weapon_shell.min_max_piercing
+		frame.weapon_min_max_piercing.config(text=f"Min: {piercing_min}, Max: {piercing_max}")
+
 
 	tk_utils.clear_frame_children(frame)
 
@@ -259,7 +313,12 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 	frame.unit_path = unit
 	frame.unit_dir = os.path.dirname(bk2_xml_utils.format_href(unit))
-	frame.unit_stats = game_data_loader.get_unit_stats(data.file_system, unit)
+	frame.unit_stats_xml = game_data_loader.get_unit_xml_stats(data.file_system, unit)
+	frame.unit_stats = game_data_loader.UnitStats.from_xml_object(
+		frame.unit_stats_xml,
+		data.file_system,
+		lambda: redraw_frames(),
+		frame.unit_path)
 	frame.has_weapons = False
 
 	frame.unit_icon = game_data_loader.get_unit_icon(data.file_system, unit)
@@ -276,28 +335,35 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 	max_hp_label = tk.Label(frame, text="MaxHP:")
 	max_hp_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 
-	max_hp = tk.Label(frame, text=game_data_loader.get_hp_stats(frame.unit_stats))
+	max_hp = tk_utils.create_float_entry(frame, frame.unit_stats.MaxHP)
 	max_hp.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 	aabb_coef_label = tk.Label(frame, text="AABBCoef:")
 	aabb_coef_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-	aabb_coef = tk.Label(frame, text=game_data_loader.get_aabb_coef(frame.unit_stats))
+	aabb_coef = tk_utils.create_float_entry(frame, frame.unit_stats.SmallAABBCoeff)
 	aabb_coef.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 	aabb_half_label = tk.Label(frame, text="AABB Half Size:")
 	aabb_half_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 
-	aabb_half_value = game_data_loader.get_aabb_half(frame.unit_stats)
-	aabb_half = tk.Label(frame, text=f"x: {aabb_half_value[0]}, y: {aabb_half_value[1]}")
+	aabb_half = tk_utils.create_2x_float_entry(frame, frame.unit_stats.AABBHalfSize_x, frame.unit_stats.AABBHalfSize_y,
+											   "x: ", ", y: ", "", 6, 6)
 	aabb_half.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
-	frame.armors = armors_value = game_data_loader.get_unit_armors(frame.unit_stats)
+	aabb_center_label = tk.Label(frame, text="AABB Center:")
+	aabb_center_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+
+	aabb_center = tk_utils.create_2x_float_entry(frame, frame.unit_stats.AABBCenter_x, frame.unit_stats.AABBCenter_y,
+											   "x: ", ", y: ", "", 6, 6)
+	aabb_center.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+	frame.armors = armors_value = game_data_loader.get_unit_armors(frame.unit_stats_xml)
 	create_armors_labels(armors_value)
 
 	frame.weapons_frame = tk.Frame(frame, bd=1)
 	frame.weapons_frame.grid(row=row_builder.next, column=0, padx=0, pady=5, columnspan=2)
 
-	frame.weapons_data = weapons_data = game_data_loader.UnitWeaponsData(data.file_system, frame.unit_stats, unit)
+	frame.weapons_data = weapons_data = game_data_loader.UnitWeaponsData(data.file_system, frame.unit_stats_xml, unit)
 	if weapons_data.weapon_count < 1:
 		tk.Label(frame, text="No weapons").grid(row=weapon_selection_row, column=0, padx=5, pady=5, columnspan=2)
 	else:
@@ -313,7 +379,22 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		frame.weapon_option.grid(row=weapon_selection_row, column=1, padx=5, pady=5, sticky=E)
 		on_weapon_shell_changed_command(weapon_selection.get())
 
+
+
 	frame.columnconfigure(0, weight=1)
 	frame.columnconfigure(1, weight=1)
 
 	return
+
+
+def get_stacked_unit_bonuses(frame: tk.Frame):
+	ret = StatsBonuses()
+
+	bonuses = getattr(frame, "stats_bonuses", None)
+	if not bonuses:
+		return ret
+
+	for bonus in bonuses:
+		ret += bonus
+
+	return ret

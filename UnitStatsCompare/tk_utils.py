@@ -1,5 +1,7 @@
 from tkinter import *
 import tkinter as tk
+from tkinter import messagebox
+import stats_compare_data as data
 
 class RowBuilder:
 
@@ -109,3 +111,42 @@ def lerp_color(color1, color2, t):
 	return rgb_to_hex(lerped_rgb)
 
 ########################################################################################################################
+
+
+def is_float(new_value):
+	if new_value == "":
+		return True
+	try:
+		float(new_value)
+		return True
+	except ValueError:
+		return False
+
+
+def create_float_entry(root, variable: DoubleVar, width=10):
+
+	vcmd = (root.register(is_float), "%P")
+
+	entry = tk.Entry(root, textvariable=variable, width=width, validate="key", validatecommand=vcmd)
+
+	return entry
+
+
+def create_2x_float_entry(root, variable1: DoubleVar, variable2: DoubleVar, text_before: str = "", text_middle: str = "", text_after: str = "", width1: int = 10, width2: int = 10):
+
+	ret = tk.Frame(root)
+
+	vcmd = (root.register(is_float), "%P")
+
+	tk.Label(ret, text=text_before).grid(row=0, column=0)
+
+	tk.Entry(ret, textvariable=variable1, validate="key", validatecommand=vcmd, width=width1).grid(row=0, column=1)
+
+	tk.Label(ret, text=text_middle).grid(row=0, column=2)
+
+	tk.Entry(ret, textvariable=variable2, validate="key", validatecommand=vcmd, width=width2).grid(row=0, column=3)
+
+	tk.Label(ret, text=text_after).grid(row=0, column=4)
+
+	return ret
+

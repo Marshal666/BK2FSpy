@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import *
-from tkinter import filedialog, messagebox
+from tkinter import messagebox
 import bk2_xml_utils
 from UnitStatsCompare.unit_comparer import AttackDirection
 from stats_compare import RowBuilder
@@ -10,7 +10,6 @@ import os
 import game_data_loader
 from game_data_loader import StatsBonuses
 import stats_compare_data as data
-from virtual_file_system_abstract import VirtualFileSystemBaseClass
 import consts
 
 
@@ -45,7 +44,7 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 							messagebox.showwarning("Not supported", "Infantry is currently not supported.")
 							return
 
-						init_unit_frame(unit_frame, title, units[index][1])
+						init_unit_frame(unit_frame, title, units[index][1], reinf_type=unit_type)
 						comparison_frame.init_comparison_frame(data.comparison_frame)
 						window.destroy()
 
@@ -175,7 +174,7 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 	return
 
 
-def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weapon: StringVar = None):
+def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weapon: StringVar = None, reinf_type: str = None):
 
 	def on_weapon_shell_changed_command(arg):
 		weapon_index = frame.weapon_names.index(arg)
@@ -274,16 +273,21 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		# init_unit_frame(frame, title, unit, selected_weapon, True)
 
 		# redraw avg armor labels
-		for i, label in enumerate(frame.avg_armor_labels):
+		avg_armor_labels = getattr(frame, "avg_armor_labels", [])
+		for i, label in enumerate(avg_armor_labels):
 			try :
 				min_armor = frame.unit_stats.Armors[i][0].get()
 				max_armor = frame.unit_stats.Armors[i][1].get()
 			except Exception as e:
 				break
 			avg_armor = (min_armor + max_armor) / 2.0
+			# TODO fix error(s) around here... and add innerUnitStats support too (check how  they work before)!
 			label.config(text=f", Avg: {avg_armor}")
 
 		if not hasattr(frame, "weapon_names"):
+			return
+
+		if len(frame.unit_stats.WeaponsShells) < 1:
 			return
 
 		# redraw weapon min max stuff
@@ -326,6 +330,9 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		frame.unit_path)
 	frame.has_weapons = False
 
+	if reinf_type:
+		frame.unit_stats.ReinfType.set(reinf_type)
+
 	frame.unit_icon = game_data_loader.get_unit_icon(data.file_system, unit)
 	frame.icon = tk.Label(frame, image=frame.unit_icon, width=48, height=48)
 	frame.icon.grid(row=row_builder.current, column=0, padx=5, pady=5, columnspan=2)
@@ -336,6 +343,23 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 	frame.get_unit_button.grid(row=row_builder.next, column=0, padx=15, pady=10, columnspan=2)
 
 	weapon_selection_row = row_builder.next
+
+	tk.Label(frame, text="Abilities:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	abilities_frame = tk_utils.create_ability_entry(frame, frame.unit_stats)
+	abilities_frame.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+	tk.Label(frame, text="Entrenched:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	(tk_utils.create_toggle_button(frame, frame.unit_stats.Entrenched,
+								  "Entrenched ✅", "Not Entrenched ❎")
+	 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+
+	tk.Label(frame, text="Unit Level:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	(tk.OptionMenu(frame, frame.unit_stats.UnitLevel, *["1", "2", "3", "4"]).
+	 grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+
+	tk.Label(frame, text="Reinf Type:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	(tk.OptionMenu(frame, frame.unit_stats.ReinfType, *game_data_loader.reinf_types)
+	 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
 
 	max_hp_label = tk.Label(frame, text="MaxHP:")
 	max_hp_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)

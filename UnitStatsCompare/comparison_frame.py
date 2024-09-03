@@ -90,6 +90,8 @@ def init_comparison_frame(frame: tk.Frame):
 	weapon_index = data.attacker_frame.weapon_names.index(data.attacker_frame.selected_weapon.get())
 	attacker_weapon_shell : UnitStats.WeaponShellStats = data.attacker_frame.unit_stats.WeaponsShells[weapon_index]
 	side = AttackDirection[attack_direction.get()]
+	data.attacker_frame.applied_bonuses = data.attacker_frame.unit_stats.get_applied_stats_bonuses()
+	data.defender_frame.applied_bonuses = data.defender_frame.unit_stats.get_applied_stats_bonuses()
 
 	piercing_probability_label = tk.Label(frame, text="Piercing Probability: ")
 	piercing_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
@@ -137,7 +139,7 @@ def init_comparison_frame(frame: tk.Frame):
 	total_shot_chance_label.grid(row=chance_for_good_shot_row, column=0, padx=5, pady=5, sticky=W)
 	Hovertip(total_shot_chance_label, "Overall chance to get a good shot on defender", hover_delay=400)
 	total_chance = piercing_probability * hit_probability
-	(tk.Label(frame, text=f"{total_chance*100:.2f}%", fg=tk_utils.lerp_color("#FF0000", "#00FF00", total_chance), font=("Arial", 12, "bold"))
+	(tk.Label(frame, text=f"{total_chance*100:.2f}%", fg=tk_utils.lerp_color("#FF000A", "#00FF0A", total_chance), font=("Arial", 12, "bold"))
 	 .grid(row=chance_for_good_shot_row, column=1, padx=5, pady=5, sticky=E))
 
 

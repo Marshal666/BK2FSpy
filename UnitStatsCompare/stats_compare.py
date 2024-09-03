@@ -13,6 +13,7 @@ import tk_utils
 from tk_utils import RowBuilder
 import comparison_frame
 import unit_frame
+import game_data_loader
 
 
 def on_file_system_loaded():
@@ -69,6 +70,7 @@ def open_game_folders_command():
 		window.destroy()
 		on_file_system_loaded()
 
+		game_data_loader.load_game_data(data.file_system)
 		messagebox.showinfo("Data Loaded", "Data was loaded successfully")
 		return
 
@@ -196,7 +198,7 @@ def open_simulation_config_command():
 def main():
 	root = data.root = Tk()
 	root.title('BK2 Unit Stats Compare')
-	root.geometry("1280x900")
+	root.geometry("1300x1200")
 	root.minsize(800, 600)
 	root.iconbitmap("icon.ico")
 

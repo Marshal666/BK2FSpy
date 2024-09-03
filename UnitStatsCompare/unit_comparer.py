@@ -30,7 +30,7 @@ def get_piercing_probability(attacker_frame, defender_frame, attack_direction: A
 		piercing_random = weapon_shell.PiercingRandom.get()
 	except Exception:
 		return float("NaN")
-	return probability_calculation.piercing_probability(armors[0], armors[1], piercing, piercing_random)
+	return probability_calculation.piercing_probability(armors[0], armors[1], piercing, piercing_random, attacker_frame.applied_bonuses.WeaponPiercing.add_bonus, attacker_frame.applied_bonuses.WeaponPiercing.mult_bonus)
 
 
 def get_aabb_hit_probability(attacker_frame, defender_frame, range: float, attack_direction: int) -> tuple[float, float, float]:
@@ -52,5 +52,8 @@ def get_aabb_hit_probability(attacker_frame, defender_frame, range: float, attac
 	iters = data.simulation_iterations.get()
 
 	rng_seed = data.simulation_rng_seed.get()
+
+	dispersion = (dispersion + attacker_frame.applied_bonuses.WeaponDispersion.add_bonus) * attacker_frame.applied_bonuses.WeaponDispersion.mult_bonus
+	aabb_coef = (aabb_coef + defender_frame.applied_bonuses.SmallAABBCoeff.add_bonus) * defender_frame.applied_bonuses.SmallAABBCoeff.mult_bonus
 
 	return probability_calculation.get_hit_count(aabb_half_size, aabb_center, dir, aabb_coef, dispersion, iters, rng_seed)

@@ -3,10 +3,13 @@ import numpy as np
 from Vector2 import Vector2
 import aabb_hit_calc
 
-def piercing_probability(armor_min, armor_max, piercing, piercing_random):
+def piercing_probability(armor_min, armor_max, piercing, piercing_random, bonus_piercing_add, bonus_piercing_mult):
 	# Calculate MinimumPiercing and MaximumPiercing
 	min_piercing = piercing - piercing_random  # Using max(0, piercing - piercing_random) doesn't work 100% well.
 	max_piercing = piercing + piercing_random
+
+	min_piercing = (min_piercing + bonus_piercing_add) * bonus_piercing_mult
+	max_piercing = (max_piercing + bonus_piercing_add) * bonus_piercing_mult
 
 	if max_piercing < armor_min:
 		return 0.0

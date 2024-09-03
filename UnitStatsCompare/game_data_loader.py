@@ -140,6 +140,18 @@ def get_unit_xml_stats(file_system: VirtualFileSystemBaseClass, unit_path: str):
 	return unit_stats
 
 
+def read_href_texture(texture_xml_object, file_system: VirtualFileSystemBaseClass, root_dir: str):
+	texture_xml_file = bk2_xml_utils.href_read_xml_object(texture_xml_object, file_system, root_dir)
+	texture_path = os.path.dirname(bk2_xml_utils.format_href(texture_xml_object.attrib["href"]))
+
+	if not texture_path or not texture_path.strip():
+		texture_path = root_dir
+
+	dds_image: bytes = bk2_xml_utils.href_get_binary_file_contents(texture_xml_file.DestName, file_system, texture_path)
+	tkimg = Image.open(io.BytesIO(dds_image))
+	photo = ImageTk.PhotoImage(tkimg)
+	return photo
+
 def get_unit_icon(file_system: VirtualFileSystemBaseClass, unit_path: str):
 
 	unit_path = bk2_xml_utils.format_href(unit_path)
@@ -154,19 +166,7 @@ def get_unit_icon(file_system: VirtualFileSystemBaseClass, unit_path: str):
 
 	root_dir = os.path.dirname(unit_path)
 
-	texture_file = bk2_xml_utils.href_read_xml_object(unit_stats.IconTexture, file_system, root_dir)
-
-	texture_path = bk2_xml_utils.actual_href_path(unit_stats.IconTexture, file_system, root_dir)
-	texture_path = os.path.dirname(texture_path)
-
-	dds_image: bytes = bk2_xml_utils.href_get_binary_file_contents(texture_file.DestName, file_system, texture_path)
-
-	tkimg = Image.open(io.BytesIO(dds_image))
-
-	photo = ImageTk.PhotoImage(tkimg)
-
-	return photo
-
+	return read_href_texture(unit_stats.IconTexture, file_system, root_dir)
 
 def get_unit_name(file_system: VirtualFileSystemBaseClass, unit_path: str):
 
@@ -230,8 +230,8 @@ class StatsBonuses:
 		def __add__(self, other):
 			ret = StatsBonuses.StatsBonus()
 			ret.add_bonus = self.add_bonus + other.add_bonus
-			ret.mult_bonus = self.mult_bonus + other.mult_bonus
-			ret.zero_count = self.zero_count + other.zero_count
+			ret.mult_bonus = self.mult_bonus * other.mult_bonus
+			ret.zero_count = self.zero_count * other.zero_count
 			return ret
 
 	PROPERTIES = [	"Durability",
@@ -262,7 +262,8 @@ class StatsBonuses:
 		for p in StatsBonuses.PROPERTIES:
 			s1 = getattr(self, p, StatsBonuses.StatsBonus())
 			s2 = getattr(other, p, StatsBonuses.StatsBonus())
-			ret.add_bonus = s1.add_bonus + s2.add_bonus
+			setattr(ret, p, s1 + s2)
+			# ret.add_bonus = s1.add_bonus + s2.add_bonus
 		return ret
 
 	@staticmethod
@@ -273,7 +274,7 @@ class StatsBonuses:
 			if not isinstance(bonuses, StatsBonuses.StatsBonus):
 				bonuses = StatsBonuses.StatsBonus.from_xml_object(bonuses)
 			setattr(ret, p, bonuses)
-		return
+		return ret
 
 
 def get_stats_bonuses(file_system: VirtualFileSystemBaseClass, stats_href, root_path: str):
@@ -368,6 +369,122 @@ class UnitWeaponsData:
 		min_piercing = max(0, piercing - piercing_random)
 		max_piercing = piercing + piercing_random
 		return min_piercing, max_piercing
+
+
+loaded_skill_icons_enabled: dict = dict()
+loaded_skill_icons_disabled: dict = dict()
+
+def get_ability_icons(ability_name: str) -> tuple | None:
+	key = ability_name.replace("ABILITY", "USER_ACTION")
+	ret1 = None
+	ret2 = None
+
+	# special cases...
+	if key == "USER_ACTION_MANUVERABLE_FIGHT_MODE":
+		key = "USER_ACTION_MOVING_SHOOT"
+	if key == "USER_ACTION_CRITICAL_TARGETING":
+		key = "USER_ACTION_CRITICAL_TARGETTING"
+	if key == "USER_ACTION_SUPRESS":
+		key = "USER_ACTION_SUPPRESS"
+	if key == "USER_ACTION_ANTIATRILLERY_FIRE":
+		key = "USER_ACTION_COUNTER_FIRE"
+	if key == "USER_ACTION_RAPID_FIRE_MODE":
+		key = "USER_ACTION_RAPID_FIRE"
+	if key == "USER_ACTION_DROP_BOMBS":
+		key = "USER_ACTION_DROP_BOMB"
+	if key == "USER_ACTION_OVERLOAD_MODE":
+		key = "USER_ACTION_KAMIKAZE"
+
+	if key in loaded_skill_icons_enabled:
+		ret1 = loaded_skill_icons_enabled[key]
+	if key in loaded_skill_icons_disabled:
+		ret2 = loaded_skill_icons_disabled[key]
+	return ret1, ret2
+
+def load_skill_icons(file_system: VirtualFileSystemBaseClass):
+	consts = bk2_xml_utils.load_xml_file(file_system, GAME_ROOT)
+
+	if consts is None:
+		return None
+
+	loaded_skill_icons_enabled.clear()
+	loaded_skill_icons_disabled.clear()
+
+	game_root_dir = os.path.dirname(GAME_ROOT)
+	UI = bk2_xml_utils.href_read_xml_object(consts.UI, file_system, game_root_dir)
+
+	UI_dir = os.path.dirname(bk2_xml_utils.format_href(consts.UI.attrib["href"]))
+	for item in UI.ActionButtonInfos.Item:
+
+		button = bk2_xml_utils.href_read_xml_object(item, file_system, UI_dir)
+		action = button.Action.text
+
+		button_dir = os.path.dirname(bk2_xml_utils.format_href(item.attrib["href"]))
+
+		# icon_xml = bk2_xml_utils.href_read_xml_object(button.Icon, file_system, UI_dir)
+		# disabled_icon_xml = bk2_xml_utils.href_read_xml_object(button.IconDisabled, file_system, UI_dir)
+		#
+		# icon_xml_dir = os.path.dirname(bk2_xml_utils.format_href(button.Icon.attrib["href"]))
+		# disabled_icon_xml_dir = os.path.dirname(bk2_xml_utils.format_href(button.IconDisabled.attrib["href"]))
+
+		if button.Icon.attrib["href"]:
+			loaded_skill_icons_enabled[action] = read_href_texture(button.Icon, file_system, button_dir)
+
+		if button.IconDisabled.attrib["href"]:
+			loaded_skill_icons_disabled[action] = read_href_texture(button.IconDisabled, file_system, button_dir)
+
+	return
+
+
+tank_pit_stats = StatsBonuses()
+unit_levelup_bonuses: dict[str, list[StatsBonuses]] = dict()
+reinf_types: set[str] = set()
+
+
+def load_static_abilities(file_system: VirtualFileSystemBaseClass):
+	consts = bk2_xml_utils.load_xml_file(file_system, GAME_ROOT)
+
+	if consts is None:
+		return None
+
+	game_root_dir = os.path.dirname(GAME_ROOT)
+
+	AI_Consts = bk2_xml_utils.href_read_xml_object(consts.AI, file_system, game_root_dir)
+
+	AI_Consts_dir = os.path.dirname(bk2_xml_utils.format_href(consts.AI.attrib["href"]))
+
+	tank_pit = AI_Consts.TankPits.digTankPits.Item[0]
+
+	tank_pit_mech_unit_xml_stats = bk2_xml_utils.href_read_xml_object(tank_pit, file_system, AI_Consts_dir)
+	tank_pit_xml_stats = tank_pit_mech_unit_xml_stats.InnerUnitBonus
+
+	global tank_pit_stats
+	tank_pit_stats = StatsBonuses.from_xml_file(tank_pit_xml_stats)
+
+	unit_levelup_bonuses.clear()
+	reinf_types.clear()
+	for item in AI_Consts.Common.expLevels.Item:
+		ai_exp_level = bk2_xml_utils.href_read_xml_object(item, file_system, AI_Consts_dir)
+		ai_exp_level_dir = os.path.dirname(bk2_xml_utils.format_href(item.attrib["href"]))
+
+		type = ai_exp_level.DBType.text
+
+		reinf_types.add(type)
+		unit_levelup_bonuses[type] = []
+		for level in ai_exp_level.levels.Item:
+			bonus = StatsBonuses()
+			if level.StatsBonus.attrib["href"] and level.StatsBonus.attrib["href"].strip():
+				bonus_xml = bk2_xml_utils.href_read_xml_object(level.StatsBonus, file_system, ai_exp_level_dir)
+				bonus = StatsBonuses.from_xml_file(bonus_xml)
+			unit_levelup_bonuses[type].append(bonus)
+
+	return
+
+
+def load_game_data(file_system: VirtualFileSystemBaseClass):
+	load_skill_icons(file_system)
+	load_static_abilities(file_system)
+	return
 
 
 class UnitStats:
@@ -465,6 +582,29 @@ class UnitStats:
 
 			return ret
 
+	class Ability:
+
+		def __init__(self):
+			self.StatsBonus: StatsBonuses | None = None
+			self.Name: str | None = None
+			self.Icons: tuple | None = None
+			self.Enabled: tk.BooleanVar | None = None
+			pass
+
+		@staticmethod
+		def from_xml_object(xml_object, file_system: VirtualFileSystemBaseClass, root_directory: str, on_edit_command):
+			ret = UnitStats.Ability()
+			ret.Name = xml_object.Name.text
+
+			if xml_object.StatsBonus.attrib["href"]:
+				stats_bonus = bk2_xml_utils.href_read_xml_object(xml_object.StatsBonus, file_system, root_directory)
+				ret.StatsBonus = StatsBonuses.from_xml_file(stats_bonus)
+
+			ret.Enabled = tk.BooleanVar(value=False)
+			ret.Enabled.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.Icons = get_ability_icons(ret.Name)
+			return ret
 
 
 	def __init__(self):
@@ -479,6 +619,10 @@ class UnitStats:
 		self.WeaponsData = None
 		self.WeaponsShells: list[UnitStats.WeaponShellStats] = []
 		self.Armors = [[tk.DoubleVar(), tk.DoubleVar()] for _ in range(6)]
+		self.Abilities = []
+		self.Entrenched = tk.BooleanVar(value=False)
+		self.UnitLevel = tk.IntVar(value=1)
+		self.ReinfType = tk.StringVar(value=next(iter(reinf_types)))
 
 	@property
 	def armors_float_array(self):
@@ -492,11 +636,33 @@ class UnitStats:
 	def aabb_half_size(self) -> Vector2:
 		return Vector2(self.AABBHalfSize_x.get(), self.AABBHalfSize_y.get())
 
+	def get_applied_stats_bonuses(self) -> StatsBonuses:
+		ret = StatsBonuses()
+
+		if self.Entrenched.get():
+			ret += tank_pit_stats
+
+		level_bonuses = unit_levelup_bonuses[self.ReinfType.get()]
+		if len(level_bonuses) > 0:
+			to = min(len(level_bonuses), self.UnitLevel.get())
+			for i in range(to):
+				ret += level_bonuses[i]
+
+		for ability in self.Abilities:
+			if ability.Enabled.get() and ability.StatsBonus is not None:
+				ret += ability.StatsBonus
+
+		return ret
+
 	def load_from_xml_object(self, xml_object, file_system: VirtualFileSystemBaseClass, on_edit_command,
 							 unit_path:str=""):
 		ret = self
 
 		ret.unit_path = unit_path
+
+		ret.Entrenched.trace_add("write", lambda x, y, z: on_edit_command())
+		ret.UnitLevel.trace_add("write", lambda x, y, z: on_edit_command())
+		ret.ReinfType.trace_add("write", lambda x, y, z: on_edit_command())
 
 		ret.MaxHP.set(float(xml_object.MaxHP))
 		ret.MaxHP.trace_add("write", lambda x, y, z: on_edit_command())
@@ -538,6 +704,26 @@ class UnitStats:
 
 			ret.Armors[i][1].set(armor_max)
 			ret.Armors[i][1].trace_add("write", lambda x, y, z: on_edit_command())
+
+		if xml_object.Actions.attrib["href"]:
+			actions_xml = bk2_xml_utils.href_read_xml_object(xml_object.Actions, file_system, unit_path)
+
+			actions_path = os.path.dirname(bk2_xml_utils.format_href(xml_object.Actions.attrib["href"]))
+
+			if not actions_path:
+				actions_path = unit_path
+
+			ability_items = getattr(actions_xml.SpecialAbilities, "Item", None)
+			if ability_items is not None:
+				for ability_href in ability_items:
+					ability_xml = bk2_xml_utils.href_read_xml_object(ability_href, file_system, actions_path)
+					ability_path = os.path.dirname(bk2_xml_utils.format_href(ability_href.attrib["href"]))
+
+					ability = UnitStats.Ability.from_xml_object(ability_xml, file_system, ability_path, on_edit_command)
+
+					if ability:
+						ret.Abilities.append(ability)
+
 
 	@staticmethod
 	def from_xml_object(xml_object, file_system: VirtualFileSystemBaseClass, on_edit_command, unit_path:str=""):

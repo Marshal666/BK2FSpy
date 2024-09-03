@@ -1,7 +1,7 @@
 from tkinter import *
 import tkinter as tk
-from tkinter import messagebox
-import stats_compare_data as data
+import game_data_loader
+from idlelib.tooltip import Hovertip
 
 class RowBuilder:
 
@@ -123,6 +123,17 @@ def is_float(new_value):
 		return False
 
 
+def is_int(new_value):
+	if new_value == "":
+		return True
+	try:
+		int(new_value)
+		return True
+	except ValueError:
+		return False
+
+
+
 def create_float_entry(root, variable: DoubleVar, width=10):
 
 	vcmd = (root.register(is_float), "%P")
@@ -130,6 +141,16 @@ def create_float_entry(root, variable: DoubleVar, width=10):
 	entry = tk.Entry(root, textvariable=variable, width=width, validate="key", validatecommand=vcmd)
 
 	return entry
+
+
+def create_int_entry(root, variable: IntVar, width=10):
+
+	vcmd = (root.register(is_int), "%P")
+
+	entry = tk.Entry(root, textvariable=variable, width=width, validate="key", validatecommand=vcmd)
+
+	return entry
+
 
 
 def create_2x_float_entry(root, variable1: DoubleVar, variable2: DoubleVar, text_before: str = "", text_middle: str = "", text_after: str = "", width1: int = 10, width2: int = 10):
@@ -150,3 +171,57 @@ def create_2x_float_entry(root, variable1: DoubleVar, variable2: DoubleVar, text
 
 	return ret
 
+
+def create_toggle_image_button(root, variable: BooleanVar, on_image, off_image, on_text, off_text):
+
+	def toggle():
+		variable.set(not variable.get())
+
+		if variable.get():
+			ret.config(image=on_image) if on_image is not None else ret.config(text=on_text)
+			return
+
+		ret.config(image=off_image) if off_image is not None else ret.config(text=off_text)
+		return
+
+	image = on_image if variable.get() else off_image
+	text = on_text if variable.get() else off_text
+
+	ret = tk.Button(root, command=toggle, image=image, text=text if image is None else "")
+
+	return ret
+
+
+def create_toggle_button(root, variable: BooleanVar, on_text, off_text):
+
+	def toggle():
+		variable.set(not variable.get())
+		ret.config(text=on_text) if variable.get() else ret.config(text=off_text)
+
+	ret = tk.Button(root, command=toggle, text=on_text if variable.get() else off_text)
+
+	return ret
+
+
+def create_ability_entry(root, unit_stats: game_data_loader.UnitStats):
+
+	ret = tk.Frame(root)
+
+	if len(unit_stats.Abilities) < 1:
+		tk.Label(ret, text="No Special Abilities").grid(row=0, column=0)
+		return ret
+
+	for i, ability in enumerate(unit_stats.Abilities):
+		on_text = ability.Name + "_ON"
+		off_text = ability.Name + "_OFF"
+
+		image_enabled = ability.Icons[0]
+		image_disabled = ability.Icons[1]
+
+		variable = ability.Enabled
+
+		button = create_toggle_image_button(ret, variable, image_enabled, image_disabled, on_text, off_text)
+		Hovertip(button, text=ability.Name, hover_delay=400)
+		button.grid(row=0, column=i, padx=2, pady=2, sticky=tk.W)
+
+	return ret

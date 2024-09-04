@@ -29,6 +29,29 @@ def piercing_probability(armor_min, armor_max, piercing, piercing_random, bonus_
 	return num[0] / div
 
 
+def one_shot_probability(defender_hp, damage, damage_random, bonus_add, bonus_mult, durability_add, durability_mult):
+	damage_min = damage - damage_random
+	damage_max = damage + damage_random
+
+	if damage_min == damage_max:
+		return 1.0 if damage_min >= defender_hp else 0.0
+
+	damage_min = (damage_min + bonus_add) * bonus_mult
+	damage_max = (damage_max + bonus_add) * bonus_mult
+
+	damage_min = (damage_min - durability_add) * durability_mult
+	damage_max = (damage_max - durability_add) * durability_mult
+
+	if damage_min >= defender_hp:
+		return 1.0
+
+	if defender_hp >= damage_max:
+		return 0.0
+
+	return 1.0 - (defender_hp - damage_min) / (damage_max - damage_min)
+
+
+
 def get_hit_count(aabb_half_size: Vector2,
 				  aabb_center: Vector2,
 				  dir: Vector2,

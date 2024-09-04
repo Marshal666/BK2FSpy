@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import *
 import consts
 import tk_utils
-from UnitStatsCompare import unit_comparer
+from UnitStatsCompare import unit_comparer, game_data_loader
 from UnitStatsCompare.game_data_loader import UnitStats
 from UnitStatsCompare.unit_comparer import AttackDirection
 from tk_utils import RowBuilder
@@ -73,6 +73,7 @@ def init_comparison_frame(frame: tk.Frame):
 		return
 
 	chance_for_good_shot_row = row_builder.next
+	chance_for_one_shot_row = row_builder.next
 
 	attack_directions = AttackDirection.get_str_values()
 	attack_direction = getattr(frame, "attack_direction", None)
@@ -102,7 +103,7 @@ def init_comparison_frame(frame: tk.Frame):
 
 	tk.Label(frame, text="Attack direction: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 	if not hasattr(frame, "dir_pick"):
-		frame.dir_pick = tk.IntVar(value=0)
+		frame.dir_pick = tk.IntVar(value=32768)
 	dir_pick_slider = tk.Scale(frame, from_=0, to=65535, orient=tk.HORIZONTAL, variable=frame.dir_pick, command=lambda x: init_comparison_frame(frame))
 	dir_pick_slider.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
@@ -135,12 +136,41 @@ def init_comparison_frame(frame: tk.Frame):
 	Hovertip(miss_probability_label, "The chance that the attacker will completely miss the defender, area damage might still apply if close enough", hover_delay=400)
 	tk.Label(frame, text=f"{misses/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
+	cover_coeff = data.defender_frame.applied_bonuses.Cover.value()
+	cover_coeff = min(1, max(0, cover_coeff))
+	cover_text_label = tk.Label(frame, text="Cover coefficient: ", font=("Arial", 10, "bold"))
+	Hovertip(cover_text_label, "Probability that determines if unit (defender) will take damage or not,"
+							   " no matter how strong the attacker's gun is, "
+							   "Cover of 0% means all damage is ignored", hover_delay=400)
+	cover_text_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	cover_label = tk.Label(frame, text=f"{cover_coeff*100:.2f}%", font=("Arial", 10, "bold"))
+	cover_label.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+	durability = data.defender_frame.applied_bonuses.Durability
+	durability_text_label = tk.Label(frame, text="Durability: ")
+	durability_text_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	Hovertip(durability_text_label, "Damage reduction (percentage and subtraction), Durability of 0% means complete damage reduction.")
+	durability_add_str = f" Add: {durability.add_bonus}"
+	durability_str = "None" if durability.zero_count != 0 else f"{durability.mult_bonus*100:.2f}%{'' if durability.add_bonus == 0 else durability_add_str}"
+	durability_label = tk.Label(frame, text=durability_str)
+	durability_label.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
 	total_shot_chance_label = tk.Label(frame, text="Overall shot chance: ", font=("Arial", 12, "bold"))
 	total_shot_chance_label.grid(row=chance_for_good_shot_row, column=0, padx=5, pady=5, sticky=W)
 	Hovertip(total_shot_chance_label, "Overall chance to get a good shot on defender", hover_delay=400)
-	total_chance = piercing_probability * hit_probability
+	total_chance = piercing_probability * hit_probability * cover_coeff
 	(tk.Label(frame, text=f"{total_chance*100:.2f}%", fg=tk_utils.lerp_color("#FF000A", "#00FF0A", total_chance), font=("Arial", 12, "bold"))
 	 .grid(row=chance_for_good_shot_row, column=1, padx=5, pady=5, sticky=E))
 
+	one_shot_label_label = tk.Label(frame, text="One shot chance: ")
+	one_shot_label_label.grid(row=chance_for_one_shot_row, column=0, padx=5, pady=5, sticky=W)
+	one_shot_chance = unit_comparer.get_one_shot_probability(data.attacker_frame, data.defender_frame)
+	overall_one_shot_chance = one_shot_chance * total_chance
+	one_shot_chance_label = tk.Label(frame, text=f"{overall_one_shot_chance*100:.2f}%")
+	one_shot_chance_label.grid(row=chance_for_one_shot_row, column=1, padx=5, pady=5, sticky=E)
+
+	tk.Label(frame, text="One shot chance alone: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(frame, text=f"{one_shot_chance * 100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5,
+															   sticky=E)
 
 	return

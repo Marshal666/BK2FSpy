@@ -240,9 +240,6 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 	def create_armors_labels(armors: list[tuple[float, float]]):
 
-		def format_min_max(value: tuple[float, float]) -> str:
-			return f"Min: {value[0]}, Max: {value[1]}, Avg: {(value[0] + value[1]) / 2.0}"
-
 		armors_str = AttackDirection.get_str_values()
 
 		frame.avg_armor_labels = []
@@ -281,8 +278,8 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 			except Exception as e:
 				break
 			avg_armor = (min_armor + max_armor) / 2.0
-			# TODO fix error(s) around here... and add innerUnitStats support too (check how  they work before)!
-			label.config(text=f", Avg: {avg_armor}")
+			if label.winfo_exists():
+				label.config(text=f", Avg: {avg_armor}")
 
 		if not hasattr(frame, "weapon_names"):
 			return
@@ -294,11 +291,13 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		weapon_index = frame.weapon_names.index(frame.selected_weapon.get())
 		weapon_shell = frame.unit_stats.WeaponsShells[weapon_index]
 
-		damage_min, damage_max = weapon_shell.min_max_damage
-		frame.weapon_min_max_damage.config(text=f"Min: {damage_min}, Max: {damage_max}")
+		if frame.weapon_min_max_damage.winfo_exists():
+			damage_min, damage_max = weapon_shell.min_max_damage
+			frame.weapon_min_max_damage.config(text=f"Min: {damage_min}, Max: {damage_max}")
 
-		piercing_min, piercing_max = weapon_shell.min_max_piercing
-		frame.weapon_min_max_piercing.config(text=f"Min: {piercing_min}, Max: {piercing_max}")
+		if frame.weapon_min_max_piercing.winfo_exists():
+			piercing_min, piercing_max = weapon_shell.min_max_piercing
+			frame.weapon_min_max_piercing.config(text=f"Min: {piercing_min}, Max: {piercing_max}")
 
 		return
 

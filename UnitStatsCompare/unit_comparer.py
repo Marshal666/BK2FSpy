@@ -53,7 +53,30 @@ def get_aabb_hit_probability(attacker_frame, defender_frame, range: float, attac
 
 	rng_seed = data.simulation_rng_seed.get()
 
-	dispersion = (dispersion + attacker_frame.applied_bonuses.WeaponDispersion.add_bonus) * attacker_frame.applied_bonuses.WeaponDispersion.mult_bonus
-	aabb_coef = (aabb_coef + defender_frame.applied_bonuses.SmallAABBCoeff.add_bonus) * defender_frame.applied_bonuses.SmallAABBCoeff.mult_bonus
+	dispersion = attacker_frame.applied_bonuses.WeaponDispersion.apply_bonus(dispersion)
+	aabb_coef = defender_frame.applied_bonuses.SmallAABBCoeff.apply_bonus(aabb_coef)
+
+	#print(f"defender aabb_coef: {aabb_coef}, modifiers: {defender_frame.applied_bonuses.SmallAABBCoeff}")
 
 	return probability_calculation.get_hit_count(aabb_half_size, aabb_center, dir, aabb_coef, dispersion, iters, rng_seed)
+
+
+def get_one_shot_probability(attacker_frame, defender_frame):
+	defender: game_data_loader.UnitStats = defender_frame.unit_stats
+	attacker: game_data_loader.UnitStats = attacker_frame.unit_stats
+
+	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
+	weapon_shell : UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
+
+	defender_hp = defender.MaxHP.get()
+	damage = weapon_shell.DamagePower.get()
+	damage_random = weapon_shell.DamageRandom.get()
+
+	bonus_add = attacker_frame.applied_bonuses.WeaponDamage.add_bonus
+	bonus_mult = attacker_frame.applied_bonuses.WeaponDamage.mult_bonus
+
+	durability_add = defender_frame.applied_bonuses.Durability.add_bonus
+	durability_mult = defender_frame.applied_bonuses.Durability.mult_bonus
+
+	return probability_calculation.one_shot_probability(defender_hp, damage, damage_random, bonus_add, bonus_mult,
+														durability_add, durability_mult)

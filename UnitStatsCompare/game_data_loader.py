@@ -217,7 +217,7 @@ class StatsBonuses:
 		def __init__(self):
 			self.add_bonus = 0.0
 			self.mult_bonus = 1.0
-			self.zero_count = 0.0
+			self.zero_count = 0
 
 		@staticmethod
 		def from_xml_object(obj):
@@ -233,6 +233,25 @@ class StatsBonuses:
 			ret.mult_bonus = self.mult_bonus * other.mult_bonus
 			ret.zero_count = self.zero_count * other.zero_count
 			return ret
+
+		def __str__(self):
+			return f"AddBonus: {self.add_bonus}, MultBonus: {self.mult_bonus}, ZeroCount: {self.zero_count}"
+
+		def apply_bonus(self, value: float):
+			if self.zero_count != 0:
+				return 0
+			return (value + self.add_bonus) * self.mult_bonus
+
+		def apply_bonus_as_durability(self, value):
+			if self.zero_count != 0:
+				return 0
+			return (value - self.add_bonus) * self.mult_bonus
+
+		"""For bonuses like cover"""
+		def value(self):
+			if self.zero_count != 0:
+				return 0
+			return self.add_bonus + self.mult_bonus
 
 	PROPERTIES = [	"Durability",
 					"SmallAABBCoeff",
@@ -456,7 +475,9 @@ def load_static_abilities(file_system: VirtualFileSystemBaseClass):
 	tank_pit = AI_Consts.TankPits.digTankPits.Item[0]
 
 	tank_pit_mech_unit_xml_stats = bk2_xml_utils.href_read_xml_object(tank_pit, file_system, AI_Consts_dir)
-	tank_pit_xml_stats = tank_pit_mech_unit_xml_stats.InnerUnitBonus
+	tank_pit_mech_unit_dir = os.path.dirname(bk2_xml_utils.format_href(tank_pit.attrib["href"]))
+	tank_pit_xml_stats_ref = tank_pit_mech_unit_xml_stats.InnerUnitBonus
+	tank_pit_xml_stats = bk2_xml_utils.href_read_xml_object(tank_pit_xml_stats_ref, file_system, tank_pit_mech_unit_dir)
 
 	global tank_pit_stats
 	tank_pit_stats = StatsBonuses.from_xml_file(tank_pit_xml_stats)

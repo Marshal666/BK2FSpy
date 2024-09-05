@@ -13,11 +13,16 @@ import tk_utils
 from tk_utils import RowBuilder
 import comparison_frame
 import unit_frame
+import recent_units_frame
 import game_data_loader
+
+
+PROGRAM_VERSION = "v0.1"
 
 
 def on_file_system_loaded():
 	reset_unit_frames(data.attacker_frame, data.comparison_frame, data.defender_frame, True)
+	recent_units_frame.clear_recent_units_frame()
 	return
 
 
@@ -197,7 +202,7 @@ def open_simulation_config_command():
 
 def main():
 	root = data.root = Tk()
-	root.title('BK2 Unit Stats Compare')
+	root.title(f'BK2 Unit Stats Compare {PROGRAM_VERSION}')
 	root.geometry("1300x1200")
 	root.minsize(800, 600)
 	root.iconbitmap("icon.ico")
@@ -219,15 +224,22 @@ def main():
 	config_menu.add_command(label="Simulation Config", command=open_simulation_config_command)
 	data.menu_bar.add_cascade(label="Config", menu=config_menu)
 
+	row_builder = RowBuilder()
+
+	data.recent_units_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)
+	data.recent_units_frame.grid(row=row_builder.current, column=0, padx=5, pady=5, columnspan=3, sticky=N+EW)
+	recent_units_frame.init_recent_units_frame(data.recent_units_frame)
+
 	data.attacker_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)
-	data.attacker_frame.grid(row=0, column=0, padx=5, pady=5, sticky=NW)
+	data.attacker_frame.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=NW)
 	unit_frame.init_unit_frame(data.attacker_frame, consts.ATTACKER_FRAME_TITLE)
 
 	data.defender_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)
-	data.defender_frame.grid(row=0, column=2, padx=5, pady=5, sticky=NE)
+	data.defender_frame.grid(row=row_builder.current, column=2, padx=5, pady=5, sticky=NE)
 	unit_frame.init_unit_frame(data.defender_frame, consts.DEFENDER_FRAME_TITLE)
 
 	data.comparison_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)
+	data.comparison_frame.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=N+EW)
 	comparison_frame.init_comparison_frame(data.comparison_frame)
 
 	reset_unit_frames(data.attacker_frame, data.comparison_frame, data.defender_frame, False)

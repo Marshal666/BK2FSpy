@@ -1,10 +1,11 @@
+import math
 from enum import Enum
 import game_data_loader
 import probability_calculation
 from Vector2 import Vector2
 import numpy as np
 import stats_compare_data as data
-from game_data_loader import UnitStats
+from game_data_loader import UnitStats, StatsBonuses
 
 class AttackDirection(Enum):
 	FRONT=0
@@ -18,6 +19,7 @@ class AttackDirection(Enum):
 	def get_str_values():
 		return ["FRONT", "LEFT", "BACK", "RIGHT", "TOP", "BOTTOM"]
 
+K_EPSILON = 1e-9
 
 def get_piercing_probability(attacker_frame, defender_frame, attack_direction: AttackDirection) -> float:
 
@@ -80,3 +82,51 @@ def get_one_shot_probability(attacker_frame, defender_frame):
 
 	return probability_calculation.one_shot_probability(defender_hp, damage, damage_random, bonus_add, bonus_mult,
 														durability_add, durability_mult)
+
+
+def average_amount_of_damage_shots_needed_for_killing(attacker_frame, defender_frame):
+	defender: game_data_loader.UnitStats = defender_frame.unit_stats
+	attacker: game_data_loader.UnitStats = attacker_frame.unit_stats
+
+	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
+	weapon_shell: UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
+
+	hp = defender.MaxHP.get()
+
+	damage_min, damage_max = weapon_shell.min_max_damage
+
+	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
+	defender_bonuses: StatsBonuses = defender_frame.applied_bonuses
+
+	damage_min = attacker_bonuses.WeaponDamage.apply_bonus(damage_min)
+	damage_max = attacker_bonuses.WeaponDamage.apply_bonus(damage_max)
+
+	damage_min = defender_bonuses.Durability.apply_bonus_as_durability(damage_min)
+	damage_max = defender_bonuses.Durability.apply_bonus_as_durability(damage_max)
+
+	avg_damage = (damage_min + damage_max) / 2.0
+
+	if abs(avg_damage) <= K_EPSILON:
+		return float("Inf")
+
+	return int(math.ceil(hp / avg_damage))
+
+
+
+def get_average_amount_of_shots_needed_for_kill(attacker_frame, defender_frame, total_chance: float):
+
+	ret = float("Inf")
+
+	if total_chance <= K_EPSILON:
+		return ret
+
+	dmg_amount = average_amount_of_damage_shots_needed_for_killing(attacker_frame, defender_frame)
+
+	if abs(total_chance - 1.0) <= K_EPSILON:
+		return dmg_amount
+
+	#count = int(math.ceil(math.log(1 - criteria) / math.log(1 - total_chance)))
+	count = 1.0 / total_chance
+
+	return int(round((dmg_amount * count)))
+

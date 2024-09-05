@@ -10,6 +10,7 @@ import os
 import game_data_loader
 from game_data_loader import StatsBonuses
 import stats_compare_data as data
+import recent_units_frame
 import consts
 
 
@@ -45,6 +46,12 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 							return
 
 						init_unit_frame(unit_frame, title, units[index][1], reinf_type=unit_type)
+
+						unit_path = units[index][1]
+						unit_name = game_data_loader.get_unit_name(data.file_system, unit_path)
+						unit_img = game_data_loader.get_unit_icon(data.file_system, unit_path)
+
+						recent_units_frame.add_recent_unit(unit_name, unit_path, unit_img)
 						comparison_frame.init_comparison_frame(data.comparison_frame)
 						window.destroy()
 
@@ -289,6 +296,9 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 		# redraw weapon min max stuff
 		weapon_index = frame.weapon_names.index(frame.selected_weapon.get())
+		if weapon_index >= len(frame.unit_stats.WeaponsShells):
+			return
+
 		weapon_shell = frame.unit_stats.WeaponsShells[weapon_index]
 
 		if frame.weapon_min_max_damage.winfo_exists():
@@ -306,8 +316,9 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 	row_builder = RowBuilder()
 
-	frame.title = tk.Label(frame, text=title, width=15, font=("Arial", 24, "bold"))
-	frame.title.grid(row=row_builder.current, column=0, padx=10, pady=5, sticky=EW, columnspan=2)
+	frame.title = title
+	frame.title_text = tk.Label(frame, text=title, width=15, font=("Arial", 24, "bold"))
+	frame.title_text.grid(row=row_builder.current, column=0, padx=10, pady=5, sticky=EW, columnspan=2)
 
 	frame.get_unit_button = (
 		tk.Button(frame, text="Select unit...", command=lambda: select_unit_command(frame, title), width=22))

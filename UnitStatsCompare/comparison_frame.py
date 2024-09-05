@@ -45,7 +45,6 @@ def init_comparison_frame(frame: tk.Frame):
 	tk_utils.clear_frame_children(frame)
 
 	frame.grid_columnconfigure(0, weight=1)
-	frame.grid(row=0, column=1, padx=5, pady=5, sticky=N+EW)
 
 	row_builder = RowBuilder()
 
@@ -74,6 +73,7 @@ def init_comparison_frame(frame: tk.Frame):
 
 	chance_for_good_shot_row = row_builder.next
 	chance_for_one_shot_row = row_builder.next
+	amount_of_kill_shots_row = row_builder.next
 
 	attack_directions = AttackDirection.get_str_values()
 	attack_direction = getattr(frame, "attack_direction", None)
@@ -157,7 +157,7 @@ def init_comparison_frame(frame: tk.Frame):
 
 	total_shot_chance_label = tk.Label(frame, text="Overall shot chance: ", font=("Arial", 12, "bold"))
 	total_shot_chance_label.grid(row=chance_for_good_shot_row, column=0, padx=5, pady=5, sticky=W)
-	Hovertip(total_shot_chance_label, "Overall chance to get a good shot on defender", hover_delay=400)
+	Hovertip(total_shot_chance_label, "Overall chance to get a good shot on defender, shots from area damages are not included", hover_delay=400)
 	total_chance = piercing_probability * hit_probability * cover_coeff
 	(tk.Label(frame, text=f"{total_chance*100:.2f}%", fg=tk_utils.lerp_color("#FF000A", "#00FF0A", total_chance), font=("Arial", 12, "bold"))
 	 .grid(row=chance_for_good_shot_row, column=1, padx=5, pady=5, sticky=E))
@@ -169,8 +169,20 @@ def init_comparison_frame(frame: tk.Frame):
 	one_shot_chance_label = tk.Label(frame, text=f"{overall_one_shot_chance*100:.2f}%")
 	one_shot_chance_label.grid(row=chance_for_one_shot_row, column=1, padx=5, pady=5, sticky=E)
 
+	total_damage_shots_needed = unit_comparer.get_average_amount_of_shots_needed_for_kill(data.attacker_frame, data.defender_frame, total_chance) # not accurate enough!
+	damage_shots_needed = unit_comparer.average_amount_of_damage_shots_needed_for_killing(data.attacker_frame, data.defender_frame)
+
+	#total_damage_shots_label_text = tk.Label(frame, text="Average shots needed for kill (approx): ")
+	#total_damage_shots_label_text.grid(row=amount_of_kill_shots_row, column=0, padx=5, pady=5, sticky=W)
+	#Hovertip(total_damage_shots_label_text, "Approximate number of shots needed for killing the defender, damage given from Area(s) is not used during calculation!")
+	#total_damage_shots_label = tk.Label(frame, text=f"{(total_damage_shots_needed if total_damage_shots_needed != float('inf') else '∞')}")
+	#total_damage_shots_label.grid(row=amount_of_kill_shots_row, column=1, padx=5, pady=5, sticky=E)
+
 	tk.Label(frame, text="One shot chance alone: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 	tk.Label(frame, text=f"{one_shot_chance * 100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5,
 															   sticky=E)
+
+	tk.Label(frame, text="Average damage shots needed for kill: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(frame, text=f"{damage_shots_needed}").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 	return

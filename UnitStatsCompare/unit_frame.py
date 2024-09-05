@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
 import bk2_xml_utils
-from UnitStatsCompare.unit_comparer import AttackDirection
+from unit_comparer import AttackDirection
 from stats_compare import RowBuilder
 import tk_utils
 import comparison_frame

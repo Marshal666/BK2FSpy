@@ -3,9 +3,9 @@ import tkinter as tk
 from tkinter import *
 import consts
 import tk_utils
-from UnitStatsCompare import unit_comparer, game_data_loader
-from UnitStatsCompare.game_data_loader import UnitStats
-from UnitStatsCompare.unit_comparer import AttackDirection
+import unit_comparer, game_data_loader
+from game_data_loader import UnitStats
+from unit_comparer import AttackDirection
 from tk_utils import RowBuilder
 from idlelib.tooltip import Hovertip
 import unit_frame

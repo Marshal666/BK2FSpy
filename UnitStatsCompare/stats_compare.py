@@ -205,7 +205,7 @@ def main():
 	root.title(f'BK2 Unit Stats Compare {PROGRAM_VERSION}')
 	root.geometry("1300x1200")
 	root.minsize(800, 600)
-	root.iconbitmap("icon.ico")
+	#root.iconbitmap("icon.ico")
 
 	data.simulation_iterations = IntVar(value=100000)
 	data.simulation_iterations.not_traced = True

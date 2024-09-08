@@ -117,7 +117,7 @@ def init_comparison_frame(frame: tk.Frame):
 	#range_pick_slider = tk_utils.scaler_with_entry(frame, frame.range_pick, range_min, range_max, command=lambda: init_comparison_frame(frame))
 	range_pick_slider.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=EW)
 
-	hits, bounce_offs, misses = unit_comparer.get_aabb_hit_probability(data.attacker_frame, data.defender_frame,
+	hits, bounce_offs, area_damages, misses = unit_comparer.get_aabb_hit_probability(data.attacker_frame, data.defender_frame,
 																	   frame.range_pick.get(), frame.dir_pick.get())
 	hit_probability = hits/data.simulation_iterations.get()
 
@@ -130,6 +130,11 @@ def init_comparison_frame(frame: tk.Frame):
 	bounce_off_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 	Hovertip(bounce_off_label, "The chance for defender to bounce off a shot at take no damage", hover_delay=400)
 	tk.Label(frame, text=f"{bounce_offs/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+	area_damage_probability_label = tk.Label(frame, text="Area damage probability (approx): ")
+	area_damage_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	Hovertip(area_damage_probability_label, "Chance of doing area damage", hover_delay=400)
+	tk.Label(frame, text=f"{area_damages/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
 	miss_probability_label = tk.Label(frame, text="AABB Miss probability (approx): ")
 	miss_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)

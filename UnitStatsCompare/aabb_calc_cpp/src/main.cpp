@@ -8,6 +8,10 @@
 
 typedef unsigned short ushort;
 
+template <typename T> inline T squared(T x) {
+    return x * x;
+}
+
 struct Vector2 {
 
 public:
@@ -200,7 +204,7 @@ public:
         v4 = pointForward - dirPerp * width;
     }
 
-    bool IsPointInside(Vector2& point) {
+    bool IsPointInside(Vector2 point) {
         Vector2 center = Vector2((v1.x + v2.x + v3.x + v4.x) / 4, (v1.y + v2.y + v3.y + v4.y) / 4);
         short rightSign = (short)Mathf::Sign(Mathf::STriangle(v1, v2, center));
 
@@ -212,6 +216,29 @@ public:
         return
             Mathf::Sign(Mathf::STriangle(v1, v2, point)) == rightSign && Mathf::Sign(Mathf::STriangle(v2, v3, point)) == rightSign &&
             Mathf::Sign(Mathf::STriangle(v3, v4, point)) == rightSign && Mathf::Sign(Mathf::STriangle(v4, v1, point)) == rightSign;
+    }
+
+    bool IntersectsWithCircle(Vector2 circleCenter, float radius) {
+
+        if(IsPointInside(circleCenter))
+            return true;
+
+        const Vector2 newCenter = circleCenter - center;
+        const Vector2 localCoordCenter = Vector2(newCenter.x * dir.x + newCenter.y * dir.y, -newCenter.x * dir.y + newCenter.y * dir.x);
+
+        float dist = 0;
+
+        if (localCoordCenter.x < -lengthBack)
+            dist += squared(localCoordCenter.x - (-lengthBack));
+        else if (localCoordCenter.x > lengthAhead)
+            dist += squared(localCoordCenter.x - lengthAhead);
+
+        if (localCoordCenter.y < -width)
+            dist += squared(localCoordCenter.y - (-width));
+        else if(localCoordCenter.y > width)
+            dist += squared(localCoordCenter.y - width);
+
+        return dist <= squared(radius);
     }
 
     void Compress(float AABBCoef) {
@@ -242,14 +269,14 @@ public:
 
 };
 
-std::tuple<int, int, int> get_hit_probabilities(int iterations, int seed, float AABBHalfSize_x, float AABBHalfSize_y, float AABBCenter_x, float AABBCenter_y, float dir_x, float dir_y, float AABBCoef, float dispersion) {
+std::tuple<int, int, int, int> get_hit_probabilities(int iterations, int seed, float AABBHalfSize_x, float AABBHalfSize_y, float AABBCenter_x, float AABBCenter_y, float dir_x, float dir_y, float AABBCoef, float dispersion, float areaDamage) {
 
     Vector2 AABBCenter = Vector2(AABBCenter_x, AABBCenter_y), AABBHalfSize = Vector2(AABBHalfSize_x, AABBHalfSize_y), dir = Vector2(dir_x, dir_y);
 
     if (iterations < 1)
-        return std::make_tuple(0, 0, 0);
+        return std::make_tuple(0, 0, 0, 0);
 
-    int hits = 0, bounceOffs = 0, misses = 0;
+    int hits = 0, bounceOffs = 0, areaDamages = 0, misses = 0;
 
     SRect rect_full = SRect::GetUnitRect(AABBHalfSize, AABBCenter, dir);
     SRect rect_scaled = SRect::GetUnitRect(AABBHalfSize, AABBCenter, dir);
@@ -267,10 +294,14 @@ std::tuple<int, int, int> get_hit_probabilities(int iterations, int seed, float 
             bounceOffs++;
             continue;
         }
+        if (rect_scaled.IntersectsWithCircle(hitPoint, areaDamage)) {
+            areaDamages++;
+            continue;
+        }
         misses++;
     }
 
-    return std::make_tuple(hits, bounceOffs, misses);
+    return std::make_tuple(hits, bounceOffs, areaDamages, misses);
 }
 
 namespace py = pybind11;

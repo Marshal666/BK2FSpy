@@ -19,6 +19,7 @@ ext_modules = [
         ["src/main.cpp"],
         # Example: passing in the version to the compiled code
         define_macros=[("VERSION_INFO", __version__)],
+        extra_compile_args=['-std=c++17'],
     ),
 ]
 
@@ -26,7 +27,7 @@ setup(
     name="aabb_hit_calc",
     version=__version__,
     author="Field Marshal",
-    author_email="field.marshal (discrod)",
+    author_email="field.marshal (discord)",
     url="none",
     description="AABB hit probability calculation library",
     long_description="",

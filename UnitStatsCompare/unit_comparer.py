@@ -35,7 +35,7 @@ def get_piercing_probability(attacker_frame, defender_frame, attack_direction: A
 	return probability_calculation.piercing_probability(armors[0], armors[1], piercing, piercing_random, attacker_frame.applied_bonuses.WeaponPiercing.add_bonus, attacker_frame.applied_bonuses.WeaponPiercing.mult_bonus)
 
 
-def get_aabb_hit_probability(attacker_frame, defender_frame, range: float, attack_direction: int) -> tuple[float, float, float]:
+def get_aabb_hit_probability(attacker_frame, defender_frame, range: float, attack_direction: int) -> tuple[float, float, float, float]:
 
 	dir = Vector2.direction_to_vector(np.uint16(attack_direction % 65536))
 
@@ -49,7 +49,7 @@ def get_aabb_hit_probability(attacker_frame, defender_frame, range: float, attac
 		aabb_half_size = defender_frame.unit_stats.aabb_half_size
 		aabb_center = defender_frame.unit_stats.aabb_center
 	except Exception:
-		return float("NaN"), float("NaN"), float("NaN")
+		return float("NaN"), float("NaN"), float("NaN"), float("NaN")
 
 	iters = data.simulation_iterations.get()
 
@@ -58,9 +58,12 @@ def get_aabb_hit_probability(attacker_frame, defender_frame, range: float, attac
 	dispersion = attacker_frame.applied_bonuses.WeaponDispersion.apply_bonus(dispersion)
 	aabb_coef = defender_frame.applied_bonuses.SmallAABBCoeff.apply_bonus(aabb_coef)
 
+	#if unit type is MechUnit...
+	area_damage = min(weapon_shell.Area.get(), weapon_shell.Area2.get())
+
 	#print(f"defender aabb_coef: {aabb_coef}, modifiers: {defender_frame.applied_bonuses.SmallAABBCoeff}")
 
-	return probability_calculation.get_hit_count(aabb_half_size, aabb_center, dir, aabb_coef, dispersion, iters, rng_seed)
+	return probability_calculation.get_hit_count(aabb_half_size, aabb_center, dir, aabb_coef, dispersion, area_damage, iters, rng_seed)
 
 
 def get_one_shot_probability(attacker_frame, defender_frame):

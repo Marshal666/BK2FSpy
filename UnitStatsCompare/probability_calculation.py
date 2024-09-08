@@ -55,8 +55,9 @@ def one_shot_probability(defender_hp, damage, damage_random, bonus_add, bonus_mu
 def get_hit_count(aabb_half_size: Vector2,
 				  aabb_center: Vector2,
 				  dir: Vector2,
-				  aabb_coef: np.float32,
-				  dispersion: np.float32,
+				  aabb_coef: float,
+				  dispersion: float,
+				  area_damage: float,
 				  tests: int,
 				  seed: int=1337) -> tuple[int, int, int]:
 
@@ -65,4 +66,4 @@ def get_hit_count(aabb_half_size: Vector2,
 											 aabb_half_size.x, aabb_half_size.y,
 											 aabb_center.x, aabb_center.y,
 											 dir.x, dir.y,
-											 aabb_coef, dispersion)
+											 aabb_coef, dispersion, area_damage)

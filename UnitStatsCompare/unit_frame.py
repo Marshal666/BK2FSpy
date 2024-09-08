@@ -311,6 +311,9 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 		return
 
+	def invert_armors_show():
+		frame.show_armors = not frame.show_armors
+		init_unit_frame(frame, title, unit, selected_weapon, reinf_type)
 
 	tk_utils.clear_frame_children(frame)
 
@@ -396,8 +399,14 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 											   "x: ", ", y: ", "", 6, 6)
 	aabb_center.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
-	frame.armors = armors_value = game_data_loader.get_unit_armors(frame.unit_stats_xml)
-	create_armors_labels(armors_value)
+	show_armors = getattr(frame, "show_armors", True)
+	frame.show_armors = show_armors
+	show_armors_button = tk.Button(frame, text="Show Armors" if not show_armors else "Hide Armors", command=lambda: invert_armors_show())
+	show_armors_button.grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2)
+
+	if frame.show_armors:
+		frame.armors = armors_value = game_data_loader.get_unit_armors(frame.unit_stats_xml)
+		create_armors_labels(armors_value)
 
 	frame.weapons_frame = tk.Frame(frame, bd=1)
 	frame.weapons_frame.grid(row=row_builder.next, column=0, padx=0, pady=5, columnspan=2)

@@ -59,7 +59,7 @@ def get_aabb_hit_probability(attacker_frame, defender_frame, range: float, attac
 	aabb_coef = defender_frame.applied_bonuses.SmallAABBCoeff.apply_bonus(aabb_coef)
 
 	#if unit type is MechUnit...
-	area_damage = min(weapon_shell.Area.get(), weapon_shell.Area2.get())
+	area_damage = min(weapon_shell.Area.get(), weapon_shell.Area2.get()) * 32
 
 	#print(f"defender aabb_coef: {aabb_coef}, modifiers: {defender_frame.applied_bonuses.SmallAABBCoeff}")
 

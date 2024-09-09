@@ -250,25 +250,33 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		armors_str = AttackDirection.get_str_values()
 
 		frame.avg_armor_labels = []
+		frame.armor_labels = []
+		frame.armor_side_labels = []
+		frame.armor_labels_row = row_builder.next
 
-		armors_label = tk.Label(frame, text=f"Armor {armors_str[0]}: ")
-		armors_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		armor_side_label = tk.Label(frame, text=f"Armor {armors_str[0]}: ")
+		armor_side_label.grid(row=frame.armor_labels_row, column=0, padx=5, pady=5, sticky=W)
 		# armor_label = tk.Label(frame, text=f"{format_min_max(armors[0])}")
 		min_armor = frame.unit_stats.Armors[0][0]
 		max_armor = frame.unit_stats.Armors[0][1]
 		avg_armor = (min_armor.get() + max_armor.get()) / 2.0
 		armor_label = tk_utils.create_2x_float_entry(frame, min_armor, max_armor, "Min: ", ", Max: ", f", Avg: {avg_armor}", 7, 7)
-		armor_label.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+		armor_label.grid(row=frame.armor_labels_row, column=1, padx=5, pady=5, sticky=E)
 		frame.avg_armor_labels.append(armor_label.children["!label3"])
+		frame.armor_labels.append(armor_label)
+		frame.armor_side_labels.append(armor_side_label)
 
 		for i, armor_side in enumerate(armors_str[1:]):
-			tk.Label(frame, text=f"Armor {armor_side}:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+			armor_side_label = tk.Label(frame, text=f"Armor {armor_side}:")
+			armor_side_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 			min_armor = frame.unit_stats.Armors[i+1][0]
 			max_armor = frame.unit_stats.Armors[i+1][1]
 			avg_armor = (min_armor.get() + max_armor.get()) / 2.0
 			armor_label = tk_utils.create_2x_float_entry(frame, min_armor, max_armor, "Min: ", ", Max: ", f", Avg: {avg_armor}", 7, 7)
 			armor_label.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 			frame.avg_armor_labels.append(armor_label.children["!label3"])
+			frame.armor_labels.append(armor_label)
+			frame.armor_side_labels.append(armor_side_label)
 
 		return
 
@@ -313,7 +321,7 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 	def invert_armors_show():
 		frame.show_armors = not frame.show_armors
-		init_unit_frame(frame, title, unit, selected_weapon, reinf_type)
+
 
 	tk_utils.clear_frame_children(frame)
 
@@ -401,12 +409,14 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 	show_armors = getattr(frame, "show_armors", True)
 	frame.show_armors = show_armors
-	show_armors_button = tk.Button(frame, text="Show Armors" if not show_armors else "Hide Armors", command=lambda: invert_armors_show())
-	show_armors_button.grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2)
+	show_armors_button_row = row_builder.next
 
-	if frame.show_armors:
-		frame.armors = armors_value = game_data_loader.get_unit_armors(frame.unit_stats_xml)
-		create_armors_labels(armors_value)
+	frame.armors = armors_value = game_data_loader.get_unit_armors(frame.unit_stats_xml)
+	create_armors_labels(armors_value)
+
+	show_armors_button = tk.Button(frame, text="Show Armors ▶" if not show_armors else "Hide Armors ▼",
+								   command=lambda: invert_armors_show())
+	show_armors_button.grid(row=show_armors_button_row, column=0, padx=5, pady=5, columnspan=2)
 
 	frame.weapons_frame = tk.Frame(frame, bd=1)
 	frame.weapons_frame.grid(row=row_builder.next, column=0, padx=0, pady=5, columnspan=2)

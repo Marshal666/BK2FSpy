@@ -72,14 +72,14 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 						icon = game_data_loader.get_unit_icon(data.file_system, unit[1])
 						if icon is not None:
 							img = tk.Label(frame, image=icon)
-							img.grid(row=index, column=col, padx=5, pady=5, sticky=W)
+							img.grid(row=index, column=col, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 							img.icon = icon
 							col += 1
 							i = int(index)
 						(tk.Button(frame, text=f"unit{index}:", command=lambda ix=i: select_unit_button_command(ix))
-						 .grid(row=index, column=col, padx=5, pady=5, sticky=W))
+						 .grid(row=index, column=col, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W))
 						col += 1
-						tk.Label(frame, text=unit).grid(row=index, column=col, padx=5, pady=5, sticky=W)
+						tk.Label(frame, text=unit).grid(row=index, column=col, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 					return
 
@@ -94,16 +94,16 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 					tk.Label(frame, text="No reinfs found").pack()
 					return
 
-				tk.Label(frame, text="Reinf Type: ").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+				tk.Label(frame, text="Reinf Type: ").grid(row=0, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 				reinf_option = tk.StringVar()
 				reinf_option.set(reinfs[0])
 
 				reinf_options = tk.OptionMenu(frame, reinf_option, *reinfs, command=update_units_in_reinf)
-				reinf_options.grid(row=0, column=1, padx=5, pady=5, sticky=E)
+				reinf_options.grid(row=0, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 				units_frame = tk.Frame(frame)
-				units_frame.grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky=W)
+				units_frame.grid(row=1, column=0, columnspan=3, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 				frame.columnconfigure(1, weight=1)
 
@@ -115,33 +115,33 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 			tech_levels = game_data_loader.get_game_tech_levels(data.file_system)
 
 			if nations is None:
-				tk.Label(option_frame, text="No Nations").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+				tk.Label(option_frame, text="No Nations").grid(row=0, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 				return
 
 			if tech_levels is None:
-				tk.Label(option_frame, text="No Tech Levels").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+				tk.Label(option_frame, text="No Tech Levels").grid(row=0, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 				return
 
-			tk.Label(option_frame, text="Select Nation: ").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+			tk.Label(option_frame, text="Select Nation: ").grid(row=0, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 			nation_option = tk.StringVar()
 			nation_option.set(nations[0])
 
 			nation_options = tk.OptionMenu(option_frame, nation_option, *nations, command=nation_pick_command)
-			nation_options.grid(row=0, column=1, padx=5, pady=5, sticky=E)
+			nation_options.grid(row=0, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-			tk.Label(option_frame, text="Select Tech Level: ").grid(row=1, column=0, padx=5, pady=5, sticky=W)
+			tk.Label(option_frame, text="Select Tech Level: ").grid(row=1, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 			tech_level_option = tk.StringVar()
 			tech_level_option.set(tech_levels[0])
 
 			tech_level_options = tk.OptionMenu(option_frame, tech_level_option, *tech_levels, command=tech_level_pick_command)
-			tech_level_options.grid(row=1, column=1, padx=5, pady=5, sticky=E)
+			tech_level_options.grid(row=1, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 			option_frame.columnconfigure(1, weight=1)
 
 			reinf_pick_frame = tk.Frame(option_frame)
-			reinf_pick_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky=EW)
+			reinf_pick_frame.grid(row=2, column=0, columnspan=2, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=EW)
 
 			update_reinfs_frame(reinf_pick_frame)
 
@@ -163,13 +163,13 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 	selected_option = tk.StringVar()
 	selected_option.set(consts.UNIT_SELECT_OPTIONS[0])
 
-	tk.Label(window, text="Where to get the unit from: ").grid(row=0, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(window, text="Where to get the unit from: ").grid(row=0, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 	option_menu = tk.OptionMenu(window, selected_option, *consts.UNIT_SELECT_OPTIONS, command=option_selected_command)
-	option_menu.grid(row=0, column=1, padx=5, pady=5, sticky=W)
+	option_menu.grid(row=0, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 	option_frame = tk.Frame(window, bd=2, relief=tk.SUNKEN)
-	option_frame.grid(row=1, column=0, padx=5, pady=5, columnspan=2, sticky=EW)
+	option_frame.grid(row=1, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2, sticky=EW)
 
 	option_selected_command(selected_option.get())
 
@@ -195,64 +195,85 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		row_builder = RowBuilder()
 
 		(tk.Label(weapons_frame, text=f"Weapon: {frame.weapon_names[weapon_index]}").
-		 grid(row=row_builder.current, column=0, padx=5, pady=5, columnspan=2))
+		 grid(row=row_builder.current, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2))
 
-		tk.Label(weapons_frame, text="Dispersion: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		tk.Label(weapons_frame, text="Dispersion: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 		weapon_dispersion = tk_utils.create_float_entry(weapons_frame, weapon_shell.Dispersion, width=7)
-		weapon_dispersion.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+		weapon_dispersion.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-		tk.Label(weapons_frame, text="Range: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		tk.Label(weapons_frame, text="Range: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 		weapon_ranges = tk_utils.create_2x_float_entry(weapons_frame, weapon_shell.RangeMin, weapon_shell.RangeMax,
 													   "Min: ", ", Max:", width1=5, width2=5)
-		weapon_ranges.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+		weapon_ranges.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-		tk.Label(weapons_frame, text="Aim Time:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		tk.Label(weapons_frame, text="Aim Time:").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 		aim_time = tk_utils.create_float_entry(weapons_frame, weapon_shell.AimingTime, width=7)
-		aim_time.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+		aim_time.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 		(tk.Label(weapons_frame, text=f"Shell[{frame.weapons_data.get_shell_index(weapon_index)}]").
-		 grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2))
+		 grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2))
 
-		tk.Label(weapons_frame, text="Area Damage: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-		tk_utils.create_float_entry(weapons_frame, weapon_shell.Area, width=6).grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+		area1, area2 = weapon_shell.Area, weapon_shell.Area2
 
-		tk.Label(weapons_frame, text="Area2 Damage: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-		tk_utils.create_float_entry(weapons_frame, weapon_shell.Area2, width=6).grid(row=row_builder.current, column=1,
-																					padx=5, pady=5, sticky=E)
+		tk.Label(weapons_frame, text="Area Damages: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		weapon_areas = tk_utils.create_2x_float_entry(weapons_frame, area1, area2, "Area1: ", "Area2: ", width1=6, width2=6)
+		weapon_areas.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-		tk.Label(weapons_frame, text="Damage: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		tk.Label(weapons_frame, text="Damage: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 		weapon_damages = tk_utils.create_2x_float_entry(weapons_frame,
 														weapon_shell.DamagePower,
 														weapon_shell.DamageRandom,
 														"", "±", "", width1=6, width2=6)
-		weapon_damages.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+		weapon_damages.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-		tk.Label(weapons_frame, text="").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		tk.Label(weapons_frame, text="").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 		damage_min, damage_max = weapon_shell.min_max_damage
 		weapon_min_max_damage = tk.Label(weapons_frame, text=f"Min: {damage_min}, Max: {damage_max}")
 		frame.weapon_min_max_damage = weapon_min_max_damage
-		weapon_min_max_damage.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+		weapon_min_max_damage.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-		tk.Label(weapons_frame, text="Piercing: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		tk.Label(weapons_frame, text="Piercing: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 		weapon_piercings = tk_utils.create_2x_float_entry(weapons_frame,
 														  weapon_shell.Piercing,
 														  weapon_shell.PiercingRandom,
 														  "", "±", "", width1=6, width2=6)
-		weapon_piercings.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+		weapon_piercings.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-		tk.Label(weapons_frame, text="").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		tk.Label(weapons_frame, text="").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 		piercing_min, piercing_max = weapon_shell.min_max_piercing
 		weapon_min_max_piercing = tk.Label(weapons_frame, text=f"Min: {piercing_min}, Max: {piercing_max}")
 		frame.weapon_min_max_piercing = weapon_min_max_piercing
-		weapon_min_max_piercing.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+		weapon_min_max_piercing.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 		comparison_frame.init_comparison_frame(data.comparison_frame)
 
 		return
 
-	def create_armors_labels(armors: list[tuple[float, float]]):
+	def place_armor_labels():
+
+		start_row = frame.armor_labels_row
+
+		for i, side_label in enumerate(frame.armor_side_labels):
+			side_label.grid(row=start_row + i, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+
+		for i, armor_label in enumerate(frame.armor_labels):
+			armor_label.grid(row=start_row + i, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		return
+
+	def hide_armor_labels():
+
+		for i, side_label in enumerate(frame.armor_side_labels):
+			side_label.grid_forget()
+
+		for i, armor_label in enumerate(frame.armor_labels):
+			armor_label.grid_forget()
+
+		return
+
+	def create_armors_labels():
 
 		armors_str = AttackDirection.get_str_values()
 
@@ -262,28 +283,29 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		frame.armor_labels_row = row_builder.next
 
 		armor_side_label = tk.Label(frame, text=f"Armor {armors_str[0]}: ")
-		armor_side_label.grid(row=frame.armor_labels_row, column=0, padx=5, pady=5, sticky=W)
-		# armor_label = tk.Label(frame, text=f"{format_min_max(armors[0])}")
+		#armor_side_label.grid(row=frame.armor_labels_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 		min_armor = frame.unit_stats.Armors[0][0]
 		max_armor = frame.unit_stats.Armors[0][1]
 		avg_armor = (min_armor.get() + max_armor.get()) / 2.0
 		armor_label = tk_utils.create_2x_float_entry(frame, min_armor, max_armor, "Min: ", ", Max: ", f", Avg: {avg_armor}", 7, 7)
-		armor_label.grid(row=frame.armor_labels_row, column=1, padx=5, pady=5, sticky=E)
+		#armor_label.grid(row=frame.armor_labels_row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 		frame.avg_armor_labels.append(armor_label.children["!label3"])
 		frame.armor_labels.append(armor_label)
 		frame.armor_side_labels.append(armor_side_label)
 
 		for i, armor_side in enumerate(armors_str[1:]):
 			armor_side_label = tk.Label(frame, text=f"Armor {armor_side}:")
-			armor_side_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+			armor_side_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 			min_armor = frame.unit_stats.Armors[i+1][0]
 			max_armor = frame.unit_stats.Armors[i+1][1]
 			avg_armor = (min_armor.get() + max_armor.get()) / 2.0
 			armor_label = tk_utils.create_2x_float_entry(frame, min_armor, max_armor, "Min: ", ", Max: ", f", Avg: {avg_armor}", 7, 7)
-			armor_label.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+			#armor_label.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 			frame.avg_armor_labels.append(armor_label.children["!label3"])
 			frame.armor_labels.append(armor_label)
 			frame.armor_side_labels.append(armor_side_label)
+
+		place_armor_labels()
 
 		return
 
@@ -328,6 +350,15 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 	def invert_armors_show():
 		frame.show_armors = not frame.show_armors
+		frame.show_armors_button.config(text="Show Armors ▶" if not frame.show_armors else "Hide Armors ▼")
+
+		if frame.show_armors:
+			place_armor_labels()
+			return
+
+		hide_armor_labels()
+
+		return
 
 
 	tk_utils.clear_frame_children(frame)
@@ -336,7 +367,7 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 	frame.title = title
 	frame.title_text = tk.Label(frame, text=title, width=15, font=("Arial", 24, "bold"))
-	frame.title_text.grid(row=row_builder.current, column=0, padx=10, pady=5, sticky=EW, columnspan=2)
+	frame.title_text.grid(row=row_builder.current, column=0, padx=10, pady=consts.PAD_Y, sticky=EW, columnspan=2)
 
 	frame.get_unit_button = (
 		tk.Button(frame, text="Select unit...", command=lambda: select_unit_command(frame, title), width=22))
@@ -363,74 +394,74 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 	frame.unit_icon = game_data_loader.get_unit_icon(data.file_system, unit)
 	frame.icon = tk.Label(frame, image=frame.unit_icon, width=48, height=48)
-	frame.icon.grid(row=row_builder.current, column=0, padx=5, pady=5, columnspan=2)
+	frame.icon.grid(row=row_builder.current, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2)
 
 	frame.unit_name = tk.Label(frame, text=game_data_loader.get_unit_name(data.file_system, frame.unit_path))
-	frame.unit_name.grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2)
+	frame.unit_name.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2)
 
 	frame.get_unit_button.grid(row=row_builder.next, column=0, padx=15, pady=10, columnspan=2)
 
 	weapon_selection_row = row_builder.next
 
-	tk.Label(frame, text="Abilities:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(frame, text="Abilities:").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	abilities_frame = tk_utils.create_ability_entry(frame, frame.unit_stats)
-	abilities_frame.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	abilities_frame.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-	tk.Label(frame, text="Entrenched:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(frame, text="Entrenched:").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	(tk_utils.create_toggle_button(frame, frame.unit_stats.Entrenched,
 								  "Entrenched ✅", "Not Entrenched ❎")
-	 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+	 .grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E))
 
-	tk.Label(frame, text="Unit Level:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(frame, text="Unit Level:").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	(tk.OptionMenu(frame, frame.unit_stats.UnitLevel, *["1", "2", "3", "4"]).
-	 grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+	 grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E))
 
-	tk.Label(frame, text="Reinf Type:").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(frame, text="Reinf Type:").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	(tk.OptionMenu(frame, frame.unit_stats.ReinfType, *game_data_loader.reinf_types)
-	 .grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E))
+	 .grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E))
 
 	max_hp_label = tk.Label(frame, text="MaxHP:")
-	max_hp_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	max_hp_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 	max_hp = tk_utils.create_float_entry(frame, frame.unit_stats.MaxHP)
-	max_hp.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	max_hp.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	aabb_coef_label = tk.Label(frame, text="AABBCoef:")
-	aabb_coef_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	aabb_coef_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	aabb_coef = tk_utils.create_float_entry(frame, frame.unit_stats.SmallAABBCoeff)
-	aabb_coef.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	aabb_coef.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	aabb_half_label = tk.Label(frame, text="AABB Half Size:")
-	aabb_half_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	aabb_half_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 	aabb_half = tk_utils.create_2x_float_entry(frame, frame.unit_stats.AABBHalfSize_x, frame.unit_stats.AABBHalfSize_y,
 											   "x: ", ", y: ", "", 6, 6)
-	aabb_half.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	aabb_half.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	aabb_center_label = tk.Label(frame, text="AABB Center:")
-	aabb_center_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	aabb_center_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 	aabb_center = tk_utils.create_2x_float_entry(frame, frame.unit_stats.AABBCenter_x, frame.unit_stats.AABBCenter_y,
 											   "x: ", ", y: ", "", 6, 6)
-	aabb_center.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	aabb_center.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	show_armors = getattr(frame, "show_armors", True)
 	frame.show_armors = show_armors
 	show_armors_button_row = row_builder.next
 
-	frame.armors = armors_value = game_data_loader.get_unit_armors(frame.unit_stats_xml)
-	create_armors_labels(armors_value)
+	create_armors_labels()
 
 	show_armors_button = tk.Button(frame, text="Show Armors ▶" if not show_armors else "Hide Armors ▼",
 								   command=lambda: invert_armors_show())
-	show_armors_button.grid(row=show_armors_button_row, column=0, padx=5, pady=5, columnspan=2)
+	frame.show_armors_button = show_armors_button
+	show_armors_button.grid(row=show_armors_button_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2, sticky=W)
 
 	frame.weapons_frame = tk.Frame(frame, bd=1)
-	frame.weapons_frame.grid(row=row_builder.next, column=0, padx=0, pady=5, columnspan=2)
+	frame.weapons_frame.grid(row=row_builder.next, column=0, padx=0, pady=consts.PAD_Y, columnspan=2)
 
 	frame.weapons_data = weapons_data = game_data_loader.UnitWeaponsData(data.file_system, frame.unit_stats_xml, unit)
 	if weapons_data.weapon_count < 1:
-		tk.Label(frame, text="No weapons").grid(row=weapon_selection_row, column=0, padx=5, pady=5, columnspan=2)
+		tk.Label(frame, text="No weapons").grid(row=weapon_selection_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2)
 	else:
 		frame.selected_weapon = weapon_selection = StringVar() if selected_weapon is None else selected_weapon
 		frame.weapon_names = weapon_names = weapons_data.weapon_names
@@ -438,10 +469,10 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		frame.has_weapons = True
 		if selected_weapon is None:
 			weapon_selection.set(weapon)
-		tk.Label(frame, text="Weapon/Shell:").grid(row=weapon_selection_row, column=0, padx=5, pady=5, sticky=W)
+		tk.Label(frame, text="Weapon/Shell:").grid(row=weapon_selection_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 		frame.weapon_option = tk.OptionMenu(frame, weapon_selection, *weapon_names,
 											command=on_weapon_shell_changed_command)
-		frame.weapon_option.grid(row=weapon_selection_row, column=1, padx=5, pady=5, sticky=E)
+		frame.weapon_option.grid(row=weapon_selection_row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 		on_weapon_shell_changed_command(weapon_selection.get())
 
 	frame.columnconfigure(0, weight=1)

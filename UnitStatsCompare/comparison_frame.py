@@ -49,26 +49,26 @@ def init_comparison_frame(frame: tk.Frame):
 	row_builder = RowBuilder()
 
 	frame.title = tk.Label(data.comparison_frame, text="Comparison", font=("Arial", 24, "bold"), width=20)
-	frame.title.grid(row=row_builder.current, column=0, padx=5, pady=0, columnspan=2, sticky=EW)
+	frame.title.grid(row=row_builder.current, column=0, padx=consts.PAD_X, pady=0, columnspan=2, sticky=EW)
 
 	frame.switch_comparison_button = tk.Button(frame, text="<=Swap=>", width=16, command=swap_command)
-	frame.switch_comparison_button.grid(row=row_builder.next, column=0, columnspan=2, padx=5, pady=5)
+	frame.switch_comparison_button.grid(row=row_builder.next, column=0, columnspan=2, padx=consts.PAD_X, pady=consts.PAD_Y)
 
 	attacker = getattr(data.attacker_frame, "unit_path", None)
 	if attacker is None:
 		(tk.Label(frame, text="No attacker for comparison")
-		 .grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2))
+		 .grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2))
 		return
 
 	defender = getattr(data.defender_frame, "unit_path", None)
 	if defender is None:
 		(tk.Label(frame, text="No defender for comparison")
-		 .grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2))
+		 .grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2))
 		return
 
 	has_weapons = getattr(data.attacker_frame, "has_weapons", False)
 	if not has_weapons:
-		tk.Label(frame, text="Attacker has no weapon").grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2)
+		tk.Label(frame, text="Attacker has no weapon").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2)
 		return
 
 	chance_for_good_shot_row = row_builder.next
@@ -82,10 +82,10 @@ def init_comparison_frame(frame: tk.Frame):
 		attack_direction.set(attack_directions[0])
 
 	attack_direction_label = tk.Label(frame, text="Attack Side: ")
-	attack_direction_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	attack_direction_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	attack_direction_menu = tk.OptionMenu(frame, attack_direction, *attack_directions,
 										  command=lambda x: init_comparison_frame(frame))
-	attack_direction_menu.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	attack_direction_menu.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	attacker_weapon = data.attacker_frame.weapons_data.get_weapon_stats(data.attacker_frame.weapon_names.index(data.attacker_frame.selected_weapon.get()))
 	weapon_index = data.attacker_frame.weapon_names.index(data.attacker_frame.selected_weapon.get())
@@ -95,19 +95,19 @@ def init_comparison_frame(frame: tk.Frame):
 	data.defender_frame.applied_bonuses = data.defender_frame.unit_stats.get_applied_stats_bonuses()
 
 	piercing_probability_label = tk.Label(frame, text="Piercing Probability: ")
-	piercing_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	piercing_probability_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	Hovertip(piercing_probability_label, "The chance that attacker will pierce the defenders armor", hover_delay=400)
 	piercing_probability = unit_comparer.get_piercing_probability(data.attacker_frame, data.defender_frame, side)
 	piercing = tk.Label(frame, text=f"{(piercing_probability*100):.2f}%")
-	piercing.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	piercing.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-	tk.Label(frame, text="Attack direction: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(frame, text="Attack direction: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	if not hasattr(frame, "dir_pick"):
 		frame.dir_pick = tk.IntVar(value=32768)
 	dir_pick_slider = tk.Scale(frame, from_=0, to=65535, orient=tk.HORIZONTAL, variable=frame.dir_pick, command=lambda x: init_comparison_frame(frame))
-	dir_pick_slider.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	dir_pick_slider.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-	tk.Label(frame, text="Attack range: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	tk.Label(frame, text="Attack range: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	range_min, range_max = attacker_weapon_shell.range_min_max
 	if not hasattr(frame, "range_pick"):
 		frame.range_pick = tk.DoubleVar(value=range_max)
@@ -115,31 +115,31 @@ def init_comparison_frame(frame: tk.Frame):
 		frame.range_pick = tk.DoubleVar(value=frame.range_pick.get())
 	range_pick_slider = tk.Scale(frame, from_=range_min, to=range_max, orient=tk.HORIZONTAL, variable=frame.range_pick, command=lambda x: init_comparison_frame(frame))
 	#range_pick_slider = tk_utils.scaler_with_entry(frame, frame.range_pick, range_min, range_max, command=lambda: init_comparison_frame(frame))
-	range_pick_slider.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=EW)
+	range_pick_slider.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=EW)
 
 	hits, bounce_offs, area_damages, misses = unit_comparer.get_aabb_hit_probability(data.attacker_frame, data.defender_frame,
 																	   frame.range_pick.get(), frame.dir_pick.get())
 	hit_probability = hits/data.simulation_iterations.get()
 
 	hit_probability_label = tk.Label(frame, text="AABB Hit probability (approx): ")
-	hit_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	hit_probability_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	Hovertip(hit_probability_label, "The chance for attacker to properly hit defenders AABB (with AABBCoef)", hover_delay=400)
-	tk.Label(frame, text=f"{hit_probability*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	tk.Label(frame, text=f"{hit_probability*100:.2f}%").grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	bounce_off_label = tk.Label(frame, text="AABB Bounce off probability (approx): ")
-	bounce_off_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	bounce_off_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	Hovertip(bounce_off_label, "The chance for defender to bounce off a shot at take no damage", hover_delay=400)
-	tk.Label(frame, text=f"{bounce_offs/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	tk.Label(frame, text=f"{bounce_offs/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	area_damage_probability_label = tk.Label(frame, text="Area damage probability (approx): ")
-	area_damage_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	area_damage_probability_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	Hovertip(area_damage_probability_label, "Chance of doing area damage", hover_delay=400)
-	tk.Label(frame, text=f"{area_damages/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	tk.Label(frame, text=f"{area_damages/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	miss_probability_label = tk.Label(frame, text="AABB Miss probability (approx): ")
-	miss_probability_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	miss_probability_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	Hovertip(miss_probability_label, "The chance that the attacker will completely miss the defender, area damage might still apply if close enough", hover_delay=400)
-	tk.Label(frame, text=f"{misses/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	tk.Label(frame, text=f"{misses/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	cover_coeff = data.defender_frame.applied_bonuses.Cover.value()
 	cover_coeff = min(1, max(0, cover_coeff))
@@ -147,47 +147,47 @@ def init_comparison_frame(frame: tk.Frame):
 	Hovertip(cover_text_label, "Probability that determines if unit (defender) will take damage or not,"
 							   " no matter how strong the attacker's gun is, "
 							   "Cover of 0% means all damage is ignored", hover_delay=400)
-	cover_text_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	cover_text_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	cover_label = tk.Label(frame, text=f"{cover_coeff*100:.2f}%", font=("Arial", 10, "bold"))
-	cover_label.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	cover_label.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	durability = data.defender_frame.applied_bonuses.Durability
 	durability_text_label = tk.Label(frame, text="Durability: ")
-	durability_text_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	durability_text_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	Hovertip(durability_text_label, "Damage reduction (percentage and subtraction), Durability of 0% means complete damage reduction.")
 	durability_add_str = f" Add: {durability.add_bonus}"
 	durability_str = "None" if durability.zero_count != 0 else f"{durability.mult_bonus*100:.2f}%{'' if durability.add_bonus == 0 else durability_add_str}"
 	durability_label = tk.Label(frame, text=durability_str)
-	durability_label.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	durability_label.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	total_shot_chance_label = tk.Label(frame, text="Overall shot chance: ", font=("Arial", 12, "bold"))
-	total_shot_chance_label.grid(row=chance_for_good_shot_row, column=0, padx=5, pady=5, sticky=W)
+	total_shot_chance_label.grid(row=chance_for_good_shot_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	Hovertip(total_shot_chance_label, "Overall chance to get a good shot on defender, shots from area damages are not included", hover_delay=400)
 	total_chance = piercing_probability * hit_probability * cover_coeff
 	(tk.Label(frame, text=f"{total_chance*100:.2f}%", fg=tk_utils.lerp_color("#FF000A", "#00FF0A", total_chance), font=("Arial", 12, "bold"))
-	 .grid(row=chance_for_good_shot_row, column=1, padx=5, pady=5, sticky=E))
+	 .grid(row=chance_for_good_shot_row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E))
 
 	one_shot_label_label = tk.Label(frame, text="One shot chance: ")
-	one_shot_label_label.grid(row=chance_for_one_shot_row, column=0, padx=5, pady=5, sticky=W)
+	one_shot_label_label.grid(row=chance_for_one_shot_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	one_shot_chance = unit_comparer.get_one_shot_probability(data.attacker_frame, data.defender_frame)
 	overall_one_shot_chance = one_shot_chance * total_chance
 	one_shot_chance_label = tk.Label(frame, text=f"{overall_one_shot_chance*100:.2f}%")
-	one_shot_chance_label.grid(row=chance_for_one_shot_row, column=1, padx=5, pady=5, sticky=E)
+	one_shot_chance_label.grid(row=chance_for_one_shot_row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	total_damage_shots_needed = unit_comparer.get_average_amount_of_shots_needed_for_kill(data.attacker_frame, data.defender_frame, total_chance) # not accurate enough!
 	damage_shots_needed = unit_comparer.average_amount_of_damage_shots_needed_for_killing(data.attacker_frame, data.defender_frame)
 
 	#total_damage_shots_label_text = tk.Label(frame, text="Average shots needed for kill (approx): ")
-	#total_damage_shots_label_text.grid(row=amount_of_kill_shots_row, column=0, padx=5, pady=5, sticky=W)
+	#total_damage_shots_label_text.grid(row=amount_of_kill_shots_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	#Hovertip(total_damage_shots_label_text, "Approximate number of shots needed for killing the defender, damage given from Area(s) is not used during calculation!")
 	#total_damage_shots_label = tk.Label(frame, text=f"{(total_damage_shots_needed if total_damage_shots_needed != float('inf') else '∞')}")
-	#total_damage_shots_label.grid(row=amount_of_kill_shots_row, column=1, padx=5, pady=5, sticky=E)
+	#total_damage_shots_label.grid(row=amount_of_kill_shots_row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-	tk.Label(frame, text="One shot chance alone: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-	tk.Label(frame, text=f"{one_shot_chance * 100:.2f}%").grid(row=row_builder.current, column=1, padx=5, pady=5,
+	tk.Label(frame, text="One shot chance alone: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+	tk.Label(frame, text=f"{one_shot_chance * 100:.2f}%").grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y,
 															   sticky=E)
 
-	tk.Label(frame, text="Average damage shots needed for kill: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
-	tk.Label(frame, text=f"{damage_shots_needed}").grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+	tk.Label(frame, text="Average damage shots needed for kill: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+	tk.Label(frame, text=f"{damage_shots_needed}").grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	return

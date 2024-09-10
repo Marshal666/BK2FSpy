@@ -2,6 +2,7 @@ from tkinter import *
 import tkinter as tk
 import game_data_loader
 from idlelib.tooltip import Hovertip
+import consts
 
 class RowBuilder:
 

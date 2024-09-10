@@ -194,6 +194,12 @@ def open_simulation_config_command():
 	window.rng_seed_input = tk.Entry(window, textvariable=data.simulation_rng_seed, validate="key", validatecommand=(validate_command, "%P"), width=15)
 	window.rng_seed_input.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
+	damage_area_coeff_label = tk.Label(window, text="Damage area coefficient: ")
+	damage_area_coeff_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	Hovertip(damage_area_coeff_label, "Area damage reduction for original intended damage", hover_delay=500)
+	window.area_damage_coeff_input = tk_utils.create_float_entry(window, data.area_damage_coeff, 5)
+	window.area_damage_coeff_input.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
 	window.grab_set()  # Prevent interaction with the original window until this one is closed
 	window.focus_set()  # Give focus to the new window
 
@@ -211,6 +217,7 @@ def main():
 	data.simulation_iterations.not_traced = True
 	data.simulation_rng_seed = IntVar(value=1337)
 	data.simulation_rng_seed.not_traced = True
+	data.area_damage_coeff = DoubleVar(value=0.3)
 
 	data.menu_bar = tk.Menu(root)
 

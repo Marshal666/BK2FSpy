@@ -116,26 +116,53 @@ def average_amount_of_damage_shots_needed_for_killing(attacker_frame, defender_f
 
 
 
-def get_average_amount_of_shots_needed_for_kill(attacker_frame, defender_frame, total_chance: float):
+def get_average_amount_of_shots_needed_for_kill(attacker_frame, defender_frame, hit_chance: float, area_chance: float):
 
 	ret = float("Inf")
 
-	if total_chance <= K_EPSILON:
+	if hit_chance <= K_EPSILON:
 		return ret
 
-	if str(total_chance) == str(float("NaN")):
+	# NaN check
+	if hit_chance != hit_chance:
 		return float("NaN")
 
-	dmg_amount = average_amount_of_damage_shots_needed_for_killing(attacker_frame, defender_frame)
-
-	if str(dmg_amount) == str(float("NaN")):
+	if area_chance != area_chance:
 		return float("NaN")
 
-	if abs(total_chance - 1.0) <= K_EPSILON:
-		return dmg_amount
+	defender: game_data_loader.UnitStats = defender_frame.unit_stats
+	attacker: game_data_loader.UnitStats = attacker_frame.unit_stats
 
-	#count = int(math.ceil(math.log(1 - criteria) / math.log(1 - total_chance)))
-	count = 1.0 / total_chance
+	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
+	weapon_shell: UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
 
-	return int(round((dmg_amount * count)))
+	hp = defender.MaxHP.get()
+
+	if hp != hp:
+		return float("NaN")
+
+	damage_min, damage_max = weapon_shell.min_max_damage
+
+	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
+	defender_bonuses: StatsBonuses = defender_frame.applied_bonuses
+
+	damage_min = attacker_bonuses.WeaponDamage.apply_bonus(damage_min)
+	damage_max = attacker_bonuses.WeaponDamage.apply_bonus(damage_max)
+
+	damage_min = defender_bonuses.Durability.apply_bonus_as_durability(damage_min)
+	damage_max = defender_bonuses.Durability.apply_bonus_as_durability(damage_max)
+
+	avg_damage = (damage_min + damage_max) / 2.0
+
+	alpha = data.area_damage_coeff.get()
+
+	if alpha != alpha:
+		return float("NaN")
+
+	ret = hp / (avg_damage * (alpha * area_chance + hit_chance))
+
+	ret = max(1.0, ret)
+
+	return round(ret, 1)
+
 

@@ -17,7 +17,7 @@ import recent_units_frame
 import game_data_loader
 
 
-PROGRAM_VERSION = "v0.1"
+PROGRAM_VERSION = "v0.2"
 
 
 def on_file_system_loaded():

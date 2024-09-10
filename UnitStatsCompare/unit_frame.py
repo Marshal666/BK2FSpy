@@ -214,6 +214,13 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		(tk.Label(weapons_frame, text=f"Shell[{frame.weapons_data.get_shell_index(weapon_index)}]").
 		 grid(row=row_builder.next, column=0, padx=5, pady=5, columnspan=2))
 
+		tk.Label(weapons_frame, text="Area Damage: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		tk_utils.create_float_entry(weapons_frame, weapon_shell.Area, width=6).grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
+		tk.Label(weapons_frame, text="Area2 Damage: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+		tk_utils.create_float_entry(weapons_frame, weapon_shell.Area2, width=6).grid(row=row_builder.current, column=1,
+																					padx=5, pady=5, sticky=E)
+
 		tk.Label(weapons_frame, text="Damage: ").grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
 		weapon_damages = tk_utils.create_2x_float_entry(weapons_frame,
 														weapon_shell.DamagePower,

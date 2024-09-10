@@ -48,6 +48,9 @@ def get_aabb_hit_probability(attacker_frame, defender_frame, range: float, attac
 
 		aabb_half_size = defender_frame.unit_stats.aabb_half_size
 		aabb_center = defender_frame.unit_stats.aabb_center
+
+		# if unit type is MechUnit...
+		area_damage = min(weapon_shell.Area.get(), weapon_shell.Area2.get()) * 32
 	except Exception:
 		return float("NaN"), float("NaN"), float("NaN"), float("NaN")
 
@@ -57,9 +60,6 @@ def get_aabb_hit_probability(attacker_frame, defender_frame, range: float, attac
 
 	dispersion = attacker_frame.applied_bonuses.WeaponDispersion.apply_bonus(dispersion)
 	aabb_coef = defender_frame.applied_bonuses.SmallAABBCoeff.apply_bonus(aabb_coef)
-
-	#if unit type is MechUnit...
-	area_damage = min(weapon_shell.Area.get(), weapon_shell.Area2.get()) * 32
 
 	#print(f"defender aabb_coef: {aabb_coef}, modifiers: {defender_frame.applied_bonuses.SmallAABBCoeff}")
 
@@ -123,7 +123,13 @@ def get_average_amount_of_shots_needed_for_kill(attacker_frame, defender_frame, 
 	if total_chance <= K_EPSILON:
 		return ret
 
+	if str(total_chance) == str(float("NaN")):
+		return float("NaN")
+
 	dmg_amount = average_amount_of_damage_shots_needed_for_killing(attacker_frame, defender_frame)
+
+	if str(dmg_amount) == str(float("NaN")):
+		return float("NaN")
 
 	if abs(total_chance - 1.0) <= K_EPSILON:
 		return dmg_amount

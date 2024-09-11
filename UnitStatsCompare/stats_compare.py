@@ -226,7 +226,7 @@ def open_simulation_config_command():
 def main():
 	root = data.root = Tk()
 	root.title(f'BK2 Unit Stats Compare {consts.PROGRAM_VERSION}')
-	root.geometry("1220x1020")
+	root.geometry("1280x1020")
 	root.minsize(800, 600)
 	#root.iconbitmap("icon.ico")
 

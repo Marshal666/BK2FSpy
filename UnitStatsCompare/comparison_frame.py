@@ -101,7 +101,7 @@ def init_comparison_frame(frame: tk.Frame):
 		direction_message = "Current weapon shell uses TRAJECTORY_CANNON which can only hit TOP armor"
 
 	if direction_message:
-		tk.Label(frame, text=f"ⓘ {direction_message}").grid(row=row_builder.next, column=0, columnspan=2, padx=consts.PAD_X, pady=consts.PAD_Y, sticky="nsew")
+		tk.Label(frame, text=f"ⓘ {direction_message}", wraplength=352).grid(row=row_builder.next, column=0, columnspan=2, padx=consts.PAD_X, pady=consts.PAD_Y, sticky="nsew")
 
 	piercing_probability_label = tk.Label(frame, text="Piercing Probability: ")
 	piercing_probability_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)

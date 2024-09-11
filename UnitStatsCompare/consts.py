@@ -1,4 +1,8 @@
 
+PROGRAM_VERSION = "v0.2"
+APP_NAME = "BK2_Stats_Compare"
+APP_AUTHOR = "FM_Production"
+
 ATTACKER_FRAME_TITLE = "Attacker ⚔"
 
 DEFENDER_FRAME_TITLE = "Defender ⛨"

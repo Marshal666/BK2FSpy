@@ -186,6 +186,9 @@ def get_average_time_needed_for_kill(attacker_frame, defender_frame, average_sho
 
 	aim_time = attacker_bonuses.WeaponAimTime.apply_bonus(aim_time)
 
+	if average_shots_needed == float("Inf"):
+		return float("Inf")
+
 	average_shots_needed = round(average_shots_needed)
 
 	try:

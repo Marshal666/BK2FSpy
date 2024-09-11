@@ -15,15 +15,60 @@ import comparison_frame
 import unit_frame
 import recent_units_frame
 import game_data_loader
-
-
-PROGRAM_VERSION = "v0.2"
+import recent_items
 
 
 def on_file_system_loaded():
 	reset_unit_frames(data.attacker_frame, data.comparison_frame, data.defender_frame, True)
 	recent_units_frame.clear_recent_units_frame()
 	return
+
+
+def open_folders(game_folder: str, mod_folder: str) -> bool:
+	paths = {game_folder, mod_folder}
+	if "" in paths:
+		paths.remove("")
+
+	for path in paths:
+		if not os.path.isdir(path):
+			messagebox.showerror("Error", f"Invalid path: \"{path}\"")
+			return False
+
+	paths = list(paths)
+
+	logger = ConsoleLogger()
+
+	dir0 = FolderSystem(paths[0])
+	pak0 = PakLoader(paths[0], logger)
+
+	data.file_system = VirtualFileSystem(dir0)
+	data.file_system.add_system(pak0)
+
+	for i in range(1, len(paths)):
+		paki = PakLoader(paths[i], logger)
+		diri = FolderSystem(paths[i])
+		data.file_system.add_system(diri)
+		data.file_system.add_system(paki)
+
+	on_file_system_loaded()
+
+	game_data_loader.load_game_data(data.file_system)
+
+	mod_name = "None"
+	if data.file_system.contains_file("name.txt"):
+		try:
+			mod_name = data.file_system.read_text_file("name.txt")
+		except Exception as e:
+			pass
+
+	data.root.title(f'BK2 Unit Stats Compare {consts.PROGRAM_VERSION} MOD: {mod_name}')
+
+	recent_items.add_recent_item([mod_name if mod_name != "None" else f"Non-MOD {paths[0]}", game_folder, mod_folder])
+
+	if data.folders_pick:
+		data.folders_pick.destroy()
+
+	messagebox.showinfo("Data Loaded", "Data was loaded successfully")
 
 
 def open_game_folders_command():
@@ -44,49 +89,11 @@ def open_game_folders_command():
 			messagebox.showwarning("Warning", "Please select a game folder")
 			return
 
-		game_folder = game_folder_entry.get().strip()
-		mod_folder = mod_folder_entry.get().strip()
+		game_folder: str = game_folder_entry.get().strip()
+		mod_folder: str = mod_folder_entry.get().strip()
 
-		paths = { game_folder, mod_folder }
-		if "" in paths:
-			paths.remove("")
+		open_folders(game_folder, mod_folder)
 
-		for path in paths:
-			if not os.path.isdir(path):
-				messagebox.showerror("Error", f"Invalid path: \"{path}\"")
-				return
-
-		paths = list(paths)
-
-		logger = ConsoleLogger()
-
-		dir0 = FolderSystem(paths[0])
-		pak0 = PakLoader(paths[0], logger)
-
-		data.file_system = VirtualFileSystem(dir0)
-		data.file_system.add_system(pak0)
-
-		for i in range(1, len(paths)):
-			paki = PakLoader(paths[i], logger)
-			diri = FolderSystem(paths[i])
-			data.file_system.add_system(diri)
-			data.file_system.add_system(paki)
-
-		window.destroy()
-		on_file_system_loaded()
-
-		game_data_loader.load_game_data(data.file_system)
-
-		mod_name = "None"
-		if data.file_system.contains_file("name.txt"):
-			try:
-				mod_name = data.file_system.read_text_file("name.txt")
-			except Exception as e:
-				pass
-
-		data.root.title(f'BK2 Unit Stats Compare {PROGRAM_VERSION} MOD: {mod_name}')
-
-		messagebox.showinfo("Data Loaded", "Data was loaded successfully")
 		return
 
 	window = data.folders_pick = tk.Toplevel()
@@ -218,7 +225,7 @@ def open_simulation_config_command():
 
 def main():
 	root = data.root = Tk()
-	root.title(f'BK2 Unit Stats Compare {PROGRAM_VERSION}')
+	root.title(f'BK2 Unit Stats Compare {consts.PROGRAM_VERSION}')
 	root.geometry("1220x1020")
 	root.minsize(800, 600)
 	#root.iconbitmap("icon.ico")
@@ -228,11 +235,27 @@ def main():
 	data.simulation_rng_seed = IntVar(value=1337)
 	data.simulation_rng_seed.not_traced = True
 	data.area_damage_coeff = DoubleVar(value=0.3)
+	recent_items.load_recent_items()
 
 	data.menu_bar = tk.Menu(root)
 
-	file_menu = tk.Menu(data.menu_bar, tearoff=0)
+	data.file_menu = file_menu = tk.Menu(data.menu_bar, tearoff=0)
 	file_menu.add_command(label="Open Game Folders", command=open_game_folders_command)
+	file_menu.add_separator()
+
+	recent_items_menu = tk.Menu(root, tearoff=0)
+	recent_items_list = recent_items.get_recent_items()
+
+	if len(recent_items_list) < 1:
+		recent_items_menu.add_command(label="No items..", state=tk.DISABLED)
+
+	for item in recent_items_list:
+		recent_items_menu.add_command(label=item[0], command=lambda x=item: open_folders(x[1], x[2]))
+
+	#recent_items_menu.add_command(label="Clear All", command=recent_items.clear_recent_items)
+
+	file_menu.add_cascade(label="Recent Items", menu=recent_items_menu)
+
 	file_menu.add_separator()
 	file_menu.add_command(label="Quit", command=quit_command)
 	data.menu_bar.add_cascade(label="File", menu=file_menu)

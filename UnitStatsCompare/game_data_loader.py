@@ -519,6 +519,8 @@ class UnitStats:
 			self.RangeMax = tk.DoubleVar()
 			self.RangeMin = tk.DoubleVar()
 			self.Ceiling = tk.DoubleVar()
+			self.AmmoPerBurst = tk.IntVar()
+			self.trajectory = tk.StringVar()
 
 			self.Piercing = tk.DoubleVar()
 			self.PiercingRandom = tk.DoubleVar()
@@ -576,7 +578,13 @@ class UnitStats:
 			ret.Ceiling.set(float(xml_weapon_object.Ceiling))
 			ret.Ceiling.trace_add("write", lambda x, y, z: on_edit_command())
 
+			ret.AmmoPerBurst.set(int(xml_weapon_object.AmmoPerBurst))
+			ret.AmmoPerBurst.trace_add("write", lambda x, y, z: on_edit_command())
+
 			shell = xml_weapon_object.shells.Item[shell_index]
+			ret.trajectory.set(str(shell.trajectory))
+			ret.trajectory.trace_add("write", lambda x, y, z: on_edit_command())
+
 			ret.Piercing.set(float(shell.Piercing))
 			ret.Piercing.trace_add("write", lambda x, y, z: on_edit_command())
 

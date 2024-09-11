@@ -74,6 +74,7 @@ def init_comparison_frame(frame: tk.Frame):
 	chance_for_good_shot_row = row_builder.next
 	chance_for_one_shot_row = row_builder.next
 	amount_of_kill_shots_row = row_builder.next
+	average_kill_time_row = row_builder.next
 
 	attack_directions = AttackDirection.get_str_values()
 	attack_direction = getattr(frame, "attack_direction", None)
@@ -87,12 +88,20 @@ def init_comparison_frame(frame: tk.Frame):
 										  command=lambda x: init_comparison_frame(frame))
 	attack_direction_menu.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-	attacker_weapon = data.attacker_frame.weapons_data.get_weapon_stats(data.attacker_frame.weapon_names.index(data.attacker_frame.selected_weapon.get()))
 	weapon_index = data.attacker_frame.weapon_names.index(data.attacker_frame.selected_weapon.get())
 	attacker_weapon_shell : UnitStats.WeaponShellStats = data.attacker_frame.unit_stats.WeaponsShells[weapon_index]
 	side = AttackDirection[attack_direction.get()]
 	data.attacker_frame.applied_bonuses = data.attacker_frame.unit_stats.get_applied_stats_bonuses()
 	data.defender_frame.applied_bonuses = data.defender_frame.unit_stats.get_applied_stats_bonuses()
+
+	direction_message = ""
+	if attacker_weapon_shell.trajectory.get() == "TRAJECTORY_HOWITZER":
+		direction_message = "Current weapon shell uses TRAJECTORY_HOWITZER which can only hit TOP armor"
+	if attacker_weapon_shell.trajectory.get() == "TRAJECTORY_CANNON":
+		direction_message = "Current weapon shell uses TRAJECTORY_CANNON which can only hit TOP armor"
+
+	if direction_message:
+		tk.Label(frame, text=f"ⓘ {direction_message}").grid(row=row_builder.next, column=0, columnspan=2, padx=consts.PAD_X, pady=consts.PAD_Y, sticky="nsew")
 
 	piercing_probability_label = tk.Label(frame, text="Piercing Probability: ")
 	piercing_probability_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
@@ -114,7 +123,6 @@ def init_comparison_frame(frame: tk.Frame):
 	else:
 		frame.range_pick = tk.DoubleVar(value=frame.range_pick.get())
 	range_pick_slider = tk.Scale(frame, from_=range_min, to=range_max, orient=tk.HORIZONTAL, variable=frame.range_pick, command=lambda x: init_comparison_frame(frame))
-	#range_pick_slider = tk_utils.scaler_with_entry(frame, frame.range_pick, range_min, range_max, command=lambda: init_comparison_frame(frame))
 	range_pick_slider.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=EW)
 
 	hits, bounce_offs, area_damages, misses = unit_comparer.get_aabb_hit_probability(data.attacker_frame, data.defender_frame,
@@ -177,12 +185,19 @@ def init_comparison_frame(frame: tk.Frame):
 
 	total_damage_shots_needed = unit_comparer.get_average_amount_of_shots_needed_for_kill(data.attacker_frame, data.defender_frame, total_chance, area_chance)
 	damage_shots_needed = unit_comparer.average_amount_of_damage_shots_needed_for_killing(data.attacker_frame, data.defender_frame)
+	average_time_needed = unit_comparer.get_average_time_needed_for_kill(data.attacker_frame, data.defender_frame, total_damage_shots_needed)
 
 	total_damage_shots_label_text = tk.Label(frame, text="Average shots needed for kill (approx): ")
 	total_damage_shots_label_text.grid(row=amount_of_kill_shots_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	Hovertip(total_damage_shots_label_text, "Approximate number of shots needed for killing the defender")
 	total_damage_shots_label = tk.Label(frame, text=f"{(total_damage_shots_needed if total_damage_shots_needed != float('inf') else '∞')}")
 	total_damage_shots_label.grid(row=amount_of_kill_shots_row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+	average_kill_time_label_text = tk.Label(frame, text="Average time needed for killing (approx): ")
+	average_kill_time_label_text.grid(row=average_kill_time_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+	Hovertip(average_kill_time_label_text, "Approximate time needed for killing the defender in seconds")
+	average_kill_time_label = tk.Label(frame, text=f"{average_time_needed:.1f} s")
+	average_kill_time_label.grid(row=average_kill_time_row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	tk.Label(frame, text="One shot chance alone: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	tk.Label(frame, text=f"{one_shot_chance * 100:.2f}%").grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y,

@@ -76,6 +76,16 @@ def open_game_folders_command():
 		on_file_system_loaded()
 
 		game_data_loader.load_game_data(data.file_system)
+
+		mod_name = "None"
+		if data.file_system.contains_file("name.txt"):
+			try:
+				mod_name = data.file_system.read_text_file("name.txt")
+			except Exception as e:
+				pass
+
+		data.root.title(f'BK2 Unit Stats Compare {PROGRAM_VERSION} MOD: {mod_name}')
+
 		messagebox.showinfo("Data Loaded", "Data was loaded successfully")
 		return
 
@@ -209,7 +219,7 @@ def open_simulation_config_command():
 def main():
 	root = data.root = Tk()
 	root.title(f'BK2 Unit Stats Compare {PROGRAM_VERSION}')
-	root.geometry("1220x1080")
+	root.geometry("1220x1020")
 	root.minsize(800, 600)
 	#root.iconbitmap("icon.ico")
 

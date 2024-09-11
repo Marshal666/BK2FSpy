@@ -166,3 +166,44 @@ def get_average_amount_of_shots_needed_for_kill(attacker_frame, defender_frame, 
 	return round(ret, 1)
 
 
+def get_average_time_needed_for_kill(attacker_frame, defender_frame, average_shots_needed: float):
+
+	if average_shots_needed != average_shots_needed:
+		return float("NaN")
+
+	ret = float("NaN")
+
+	defender: game_data_loader.UnitStats = defender_frame.unit_stats
+	attacker: game_data_loader.UnitStats = attacker_frame.unit_stats
+
+	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
+	weapon_shell: UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
+
+	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
+	defender_bonuses: StatsBonuses = defender_frame.applied_bonuses
+
+	aim_time = weapon_shell.AimingTime.get()
+
+	aim_time = attacker_bonuses.WeaponAimTime.apply_bonus(aim_time)
+
+	average_shots_needed = round(average_shots_needed)
+
+	try:
+		ammo_per_burst = weapon_shell.AmmoPerBurst.get()
+		relax_time = weapon_shell.RelaxTime.get()
+		fire_rate = weapon_shell.FireRate.get()
+
+		relax_time = attacker_bonuses.WeaponRelaxTime.apply_bonus(relax_time)
+	except Exception:
+		return float("NaN")
+
+	if fire_rate < K_EPSILON:
+		return float("NaN")
+
+	if ammo_per_burst < 2:
+		ret = aim_time + (average_shots_needed - 1) * relax_time
+	else:
+		count = max(1.0, round(average_shots_needed / ammo_per_burst))
+		ret = aim_time + (average_shots_needed - 1) * (1.0 / fire_rate) + count * relax_time
+
+	return ret

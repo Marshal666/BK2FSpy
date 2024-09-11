@@ -12,6 +12,7 @@ from game_data_loader import StatsBonuses
 import stats_compare_data as data
 import recent_units_frame
 import consts
+from idlelib.tooltip import Hovertip
 
 
 def select_unit_command(unit_frame: tk.Frame, title: str):
@@ -211,6 +212,11 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		aim_time = tk_utils.create_float_entry(weapons_frame, weapon_shell.AimingTime, width=7)
 		aim_time.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
+		tk.Label(weapons_frame, text="Ammo Per Burst:").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+
+		ammo_per_burst = tk_utils.create_int_entry(weapons_frame, weapon_shell.AmmoPerBurst, 6)
+		ammo_per_burst.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
 		(tk.Label(weapons_frame, text=f"Shell[{frame.weapons_data.get_shell_index(weapon_index)}]").
 		 grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2))
 
@@ -246,6 +252,18 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		weapon_min_max_piercing = tk.Label(weapons_frame, text=f"Min: {piercing_min}, Max: {piercing_max}")
 		frame.weapon_min_max_piercing = weapon_min_max_piercing
 		weapon_min_max_piercing.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		fire_rate_label_text = tk.Label(weapons_frame, text="Fire Rate: ")
+		fire_rate_label_text.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		Hovertip(fire_rate_label_text, "Rate of fire used for bursts (when AmmoPerBurst > 1)", 400)
+		fire_rate_entry = tk_utils.create_float_entry(weapons_frame, weapon_shell.FireRate, 6)
+		fire_rate_entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		relax_time_label_text = tk.Label(weapons_frame, text="Relax Time: ")
+		relax_time_label_text.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		Hovertip(relax_time_label_text, "Actual reload time of the weapon", 400)
+		relax_time_entry = tk_utils.create_float_entry(weapons_frame, weapon_shell.RelaxTime, 6)
+		relax_time_entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 		comparison_frame.init_comparison_frame(data.comparison_frame)
 
@@ -305,7 +323,10 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 			frame.armor_labels.append(armor_label)
 			frame.armor_side_labels.append(armor_side_label)
 
-		place_armor_labels()
+		if frame.show_armors:
+			place_armor_labels()
+		else:
+			hide_armor_labels()
 
 		return
 
@@ -445,7 +466,7 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 											   "x: ", ", y: ", "", 6, 6)
 	aabb_center.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-	show_armors = getattr(frame, "show_armors", True)
+	show_armors = getattr(frame, "show_armors", False)
 	frame.show_armors = show_armors
 	show_armors_button_row = row_builder.next
 

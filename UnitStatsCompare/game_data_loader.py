@@ -653,6 +653,16 @@ class UnitStats:
 		self.UnitLevel = tk.IntVar(value=1)
 		self.ReinfType = tk.StringVar(value=next(iter(reinf_types)))
 
+		self.Speed = tk.DoubleVar()
+		self.RotateSpeed = tk.DoubleVar()
+		self.TurnRadius = tk.DoubleVar()
+		self.MaxHeight = tk.DoubleVar()
+		self.DivingAngle = tk.DoubleVar()
+		self.ClimbAngle = tk.DoubleVar()
+		self.TiltAngle = tk.DoubleVar()
+		self.TiltAcceleration = tk.DoubleVar()
+		self.TiltSpeed = tk.DoubleVar()
+
 	@property
 	def armors_float_array(self):
 		return [(element[0].get(), element[1].get()) for element in self.Armors]
@@ -723,6 +733,33 @@ class UnitStats:
 			ret.WeaponsShells.append(
 				UnitStats.WeaponShellStats.from_xml_weapon_object(weapon_stats, shell_index, weapon_path,
 																  on_edit_command))
+
+		ret.Speed.set(float(xml_object.Speed))
+		ret.Speed.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.RotateSpeed.set(float(xml_object.RotateSpeed))
+		ret.RotateSpeed.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.TurnRadius.set(float(xml_object.TurnRadius))
+		ret.TurnRadius.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.MaxHeight.set(float(xml_object.MaxHeight))
+		ret.MaxHeight.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.DivingAngle.set(float(xml_object.DivingAngle))
+		ret.DivingAngle.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.ClimbAngle.set(float(xml_object.ClimbAngle))
+		ret.ClimbAngle.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.TiltAngle.set(float(xml_object.TiltAngle))
+		ret.TiltAngle.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.TiltAcceleration.set(float(xml_object.TiltAcceleration))
+		ret.TiltAcceleration.trace_add("write", lambda x, y, z: on_edit_command())
+
+		ret.TiltSpeed.set(float(xml_object.TiltSpeed))
+		ret.TiltSpeed.trace_add("write", lambda x, y, z: on_edit_command())
 
 		for i in range(len(ret.Armors)):
 			armor_min = float(xml_object.armors.Item[i].Min)

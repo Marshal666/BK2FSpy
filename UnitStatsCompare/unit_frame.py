@@ -58,6 +58,20 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 
 						return
 
+					def pin_unit_button_command(index: int):
+
+						if units[index][0] != game_data_loader.MECH_UNIT_DEF:
+							messagebox.showwarning("Not supported", "Infantry is currently not supported.")
+							return
+
+						unit_path = units[index][1]
+						unit_name = game_data_loader.get_unit_name(data.file_system, unit_path)
+						unit_img = game_data_loader.get_unit_icon(data.file_system, unit_path)
+
+						recent_units_frame.add_recent_unit(unit_name, unit_path, unit_img)
+
+						return
+
 					tk_utils.clear_frame_children(frame)
 
 					unit_type = reinf_option.get()
@@ -78,6 +92,9 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 							col += 1
 							i = int(index)
 						(tk.Button(frame, text=f"unit{index}:", command=lambda ix=i: select_unit_button_command(ix))
+						 .grid(row=index, column=col, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W))
+						col += 1
+						(tk.Button(frame, text="🖈", command=lambda ix=i: pin_unit_button_command(ix))
 						 .grid(row=index, column=col, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W))
 						col += 1
 						tk.Label(frame, text=unit).grid(row=index, column=col, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
@@ -180,6 +197,14 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 	window.focus_set()  # Give focus to the new window
 
 	return
+
+
+def unit_is_aviation(unit_xml) -> bool:
+
+	if unit_xml.DBtype.text.strip() in consts.DB_AVIA_TYPES and unit_xml.UnitType.text.strip() in consts.UNIT_AVIA_TYPES:
+		return True
+
+	return False
 
 
 def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weapon: StringVar = None, reinf_type: str = None):
@@ -381,6 +406,127 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 
 		return
 
+	def create_avia_params_labels():
+
+		frame.avia_labels = []
+		frame.avia_entries = []
+
+		frame.avia_params_labels_row = row_builder.next
+
+		label = tk.Label(frame, text="Speed")
+		label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		entry = tk_utils.create_float_entry(frame, frame.unit_stats.Speed, 7)
+		entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		frame.avia_labels.append(label)
+		frame.avia_entries.append(entry)
+
+		label = tk.Label(frame, text="RotateSpeed")
+		label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		entry = tk_utils.create_float_entry(frame, frame.unit_stats.RotateSpeed, 7)
+		entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		frame.avia_labels.append(label)
+		frame.avia_entries.append(entry)
+
+		label = tk.Label(frame, text="TurnRadius")
+		label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		entry = tk_utils.create_float_entry(frame, frame.unit_stats.TurnRadius, 7)
+		entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		frame.avia_labels.append(label)
+		frame.avia_entries.append(entry)
+
+		label = tk.Label(frame, text="MaxHeight")
+		label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		entry = tk_utils.create_float_entry(frame, frame.unit_stats.MaxHeight, 7)
+		entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		frame.avia_labels.append(label)
+		frame.avia_entries.append(entry)
+
+		label = tk.Label(frame, text="DivingAngle")
+		label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		entry = tk_utils.create_float_entry(frame, frame.unit_stats.DivingAngle, 7)
+		entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		frame.avia_labels.append(label)
+		frame.avia_entries.append(entry)
+
+		label = tk.Label(frame, text="ClimbAngle")
+		label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		entry = tk_utils.create_float_entry(frame, frame.unit_stats.ClimbAngle, 7)
+		entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		frame.avia_labels.append(label)
+		frame.avia_entries.append(entry)
+
+		label = tk.Label(frame, text="TiltAngle")
+		label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		entry = tk_utils.create_float_entry(frame, frame.unit_stats.TiltAngle, 7)
+		entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		frame.avia_labels.append(label)
+		frame.avia_entries.append(entry)
+
+		label = tk.Label(frame, text="TiltAcceleration")
+		label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		entry = tk_utils.create_float_entry(frame, frame.unit_stats.TiltAcceleration, 7)
+		entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		frame.avia_labels.append(label)
+		frame.avia_entries.append(entry)
+
+		label = tk.Label(frame, text="TiltSpeed")
+		label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		entry = tk_utils.create_float_entry(frame, frame.unit_stats.TiltSpeed, 7)
+		entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		frame.avia_labels.append(label)
+		frame.avia_entries.append(entry)
+
+		if show_avia_params:
+			show_avia_params_labels()
+		else:
+			hide_avia_params_labels()
+
+		return
+
+	def show_avia_params_labels():
+
+		start_row = frame.avia_params_labels_row
+
+		for i, label in enumerate(frame.avia_labels):
+			label.grid(row=start_row + i, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+
+		for i, entry in enumerate(frame.avia_entries):
+			entry.grid(row = start_row + i, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		return
+
+	def hide_avia_params_labels():
+
+		for label in frame.avia_labels:
+			label.grid_forget()
+
+		for entry in frame.avia_entries:
+			entry.grid_forget()
+
+		return
+
+	def invert_avia_show():
+
+		frame.show_avia_params = not frame.show_avia_params
+		show_avia_params = frame.show_avia_params
+
+		frame.show_avia_params_button.config(text="Show Avia Params ▶" if not show_avia_params else "Hide Avia Params ▼")
+
+		if show_avia_params:
+			show_avia_params_labels()
+		else:
+			hide_avia_params_labels()
+
+		return
 
 	tk_utils.clear_frame_children(frame)
 
@@ -476,6 +622,14 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 								   command=lambda: invert_armors_show())
 	frame.show_armors_button = show_armors_button
 	show_armors_button.grid(row=show_armors_button_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2, sticky=W)
+
+	if unit_is_aviation(frame.unit_stats_xml):
+		frame.show_avia_params = getattr(frame, "show_avia_params", False)
+		show_avia_params = frame.show_avia_params
+		frame.show_avia_params_button = tk.Button(frame, text="Show Avia Params ▶" if not show_avia_params else "Hide Avia Params ▼",
+												  command=lambda : invert_avia_show())
+		frame.show_avia_params_button.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		create_avia_params_labels()
 
 	frame.weapons_frame = tk.Frame(frame, bd=1)
 	frame.weapons_frame.grid(row=row_builder.next, column=0, padx=0, pady=consts.PAD_Y, columnspan=2)

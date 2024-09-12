@@ -134,9 +134,9 @@ def quit_command():
 
 def reset_unit_frames(attacker_frame: tk.Frame, comparer_frame: tk.Frame, defender_frame: tk.Frame, enabled:bool):
 
-	comparison_frame.init_comparison_frame(comparer_frame)
 	unit_frame.init_unit_frame(data.attacker_frame, consts.ATTACKER_FRAME_TITLE)
-	unit_frame.init_unit_frame(data.defender_frame, consts.DEFENDER_FRAME_TITLE)
+	unit_frame.init_unit_frame(data.defender_frame, consts.DEFENDER_FRAME_TITLE),
+	comparison_frame.init_comparison_frame(comparer_frame)
 
 	if enabled:
 

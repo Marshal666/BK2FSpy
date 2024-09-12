@@ -17,5 +17,5 @@ UNIT_AVIA_TYPES = ["Fighter", "Bomber", "Ground_Attack_Plane", "Cargo_Plane", "R
 AVIA_XML_PROPERTIES = ["Speed", "RotateSpeed", "TurnRadius", "MaxHeight", "DivingAngle", "ClimbAngle", "TiltAngle", "TiltAcceleration", "TiltSpeed"]
 
 # common padding
-PAD_X = 2
-PAD_Y = 2
+PAD_X = 1
+PAD_Y = 1

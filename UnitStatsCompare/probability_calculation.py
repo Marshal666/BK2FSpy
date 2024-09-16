@@ -26,6 +26,9 @@ def piercing_probability(armor_min, armor_max, piercing, piercing_random, bonus_
 	num = integrate.quad(lambda x: (max(max_piercing, x) - max(min_piercing, x)), armor_min, armor_max)
 	div = (armor_max - armor_min) * (max_piercing - min_piercing)
 
+	if abs(div) <= 0.00001:
+		return float("NaN")
+
 	return num[0] / div
 
 

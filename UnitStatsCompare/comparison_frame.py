@@ -146,7 +146,7 @@ def init_comparison_frame(frame: tk.Frame):
 
 	miss_probability_label = tk.Label(frame, text="AABB Miss probability (approx): ")
 	miss_probability_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
-	Hovertip(miss_probability_label, "The chance that the attacker will completely miss the defender, area damage might still apply if close enough", hover_delay=400)
+	Hovertip(miss_probability_label, "The chance that the attacker will completely miss the defender", hover_delay=400)
 	tk.Label(frame, text=f"{misses/data.simulation_iterations.get()*100:.2f}%").grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	cover_coeff = data.defender_frame.applied_bonuses.Cover.value()

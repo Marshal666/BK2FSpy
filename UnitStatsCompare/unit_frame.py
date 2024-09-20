@@ -1,6 +1,9 @@
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
+
+from sympy.physics.vector import frame
+
 import bk2_xml_utils
 from unit_comparer import AttackDirection
 from stats_compare import RowBuilder
@@ -167,6 +170,92 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 		elif arg == consts.UNIT_SELECT_OPTIONS[1]:
 			# From files
 
+			def get_closest_strings(some_list: list[str], search_str: str, count: int):
+				return list(filter(lambda x: search_str in x, some_list))[:count]
+
+			def get_actual_units(units: list[str], count: int):
+				return list(filter(lambda x: game_data_loader.is_unit(data.file_system, x), units))[:count]
+
+			def create_pick_option(frame: tk.Frame, unit_path: str, row: int):
+
+				def select_unit(unit_path: str):
+
+					if not game_data_loader.is_unit(data.file_system, unit_path):
+						messagebox.showinfo("Error", "Selected file is not a unit!")
+						return
+
+					init_unit_frame(unit_frame, title, unit_path)
+
+					unit_name = game_data_loader.get_unit_name(data.file_system, unit_path)
+					unit_img = game_data_loader.get_unit_icon(data.file_system, unit_path)
+
+					recent_units_frame.add_recent_unit(unit_name, unit_path, unit_img)
+					comparison_frame.init_comparison_frame(data.comparison_frame)
+					window.destroy()
+
+					return
+
+				def pin_unit(unit_path: str):
+
+					if not game_data_loader.is_unit(data.file_system, unit_path):
+						messagebox.showinfo("Error", "Selected file is not a unit!")
+						return
+
+					unit_name = game_data_loader.get_unit_name(data.file_system, unit_path)
+					unit_img = game_data_loader.get_unit_icon(data.file_system, unit_path)
+
+					recent_units_frame.add_recent_unit(unit_name, unit_path, unit_img)
+
+					return
+
+				#unit_img = game_data_loader.get_unit_icon(data.file_system, unit_path)
+
+				#unit_img_label = tk.Label(frame, image=unit_img)
+				#unit_img_label.bind("<Button-1>", lambda x=unit_path: select_unit(x))
+				#unit_img_label.grid(row=row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+
+				select_button = tk.Button(frame, text="Select", command=lambda x=unit_path: select_unit(x))
+				select_button.grid(row=row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+
+				pin_button = tk.Button(frame, text="🖈", command=lambda x=unit_path: pin_unit(x))
+				pin_button.grid(row=row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+
+				tk.Label(frame, text=unit_path).grid(row=row, column=2, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+				return
+
+			def on_search_edit(var, index, mode):
+
+				tk_utils.clear_frame_children(search_result_frame)
+
+				value = search_var.get()
+				value = bk2_xml_utils.format_href(value)
+
+				units = get_closest_strings(files, value, consts.SEARCH_UNIT_SIZE)
+				units = get_actual_units(units, consts.UNIT_SEARCH_CAP)
+
+				if len(units) < 1:
+					tk.Label(search_result_frame, text="No units found").grid(row=0, column=0, columnspan=2)
+					return
+
+				for i, unit in enumerate(units):
+					create_pick_option(search_result_frame, unit, i)
+
+				return
+
+			tk_utils.clear_frame_children(option_frame)
+
+			files = data.file_system.get_all_files()
+
+			tk.Label(option_frame, text="Search for unit path:").grid(row=0, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+
+			search_var = tk.StringVar()
+			search_var.trace_add("write", on_search_edit)
+			tk.Entry(option_frame, textvariable=search_var, width=64).grid(row=0, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+			search_result_frame = tk.Frame(option_frame)
+			search_result_frame.grid(row=1, column=0, columnspan=2)
+
 			pass
 		else:
 			messagebox.showerror("What the fuck did you select??", "shit happened: bruh")
@@ -175,7 +264,7 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 
 	window = data.folders_pick = tk.Toplevel()
 	window.title('Pick a game unit')
-	window.geometry('800x500')
+	window.geometry('800x515')
 	window.minsize(480, 270)
 
 	selected_option = tk.StringVar()

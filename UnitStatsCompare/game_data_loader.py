@@ -96,6 +96,10 @@ MECH_UNIT_DEF = "MechUnit"
 SQUAD_UNIT_DEF = "Squad"
 
 
+MECH_UNIT_RPGS_STATS_DEF = "MechUnitRPGStats"
+SQUAD_UNIT_RPGS_STATS_DEF = "SquadRPGStats"
+
+
 def get_nation_reinf_units(file_system: VirtualFileSystemBaseClass, nation: int, tech_level: int, unit_type: str):
 	consts = bk2_xml_utils.load_xml_file(file_system, GAME_ROOT)
 
@@ -132,6 +136,20 @@ def get_nation_reinf_units(file_system: VirtualFileSystemBaseClass, nation: int,
 	ret = list(set(ret))
 
 	return ret
+
+
+def is_unit(file_system: VirtualFileSystemBaseClass, unit_path: str):
+
+	try:
+		unit_xml = bk2_xml_utils.load_xml_file(file_system, unit_path)
+
+		if unit_xml.tag == MECH_UNIT_RPGS_STATS_DEF or unit_xml.tag == SQUAD_UNIT_RPGS_STATS_DEF:
+			return True
+
+	except Exception as e:
+		return False
+
+	return False
 
 
 def get_unit_xml_stats(file_system: VirtualFileSystemBaseClass, unit_path: str):

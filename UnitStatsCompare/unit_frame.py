@@ -216,13 +216,10 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 
 				unit_img = game_data_loader.get_unit_icon(data.file_system, unit_path)
 
-				if not hasattr(frame, "imgs"):
-					frame.imgs = []
-
 				frame.imgs.append(unit_img)
 
 				unit_img_label = tk.Label(frame, image=unit_img)
-				unit_img_label.bind("<Button-1>", lambda x=unit_path: select_unit(x))
+				#unit_img_label.bind("<Button-1>", lambda x=unit_path: select_unit(x))
 				unit_img_label.grid(row=row, column=2, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
 				tk.Label(frame, text=unit_path).grid(row=row, column=3, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
@@ -243,8 +240,7 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 					tk.Label(search_result_frame, text="No units found").grid(row=0, column=0, columnspan=2)
 					return
 
-				if hasattr(search_result_frame, "imgs"):
-					search_result_frame.imgs = []
+				search_result_frame.imgs = []
 
 				for i, unit in enumerate(units):
 					create_pick_option(search_result_frame, unit, i)

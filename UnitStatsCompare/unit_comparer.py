@@ -163,7 +163,7 @@ def get_average_amount_of_shots_needed_for_kill(attacker_frame, defender_frame, 
 
 	ret = max(1.0, ret)
 
-	return round(ret, 1)
+	return round(ret)
 
 
 def get_average_time_needed_for_kill(attacker_frame, defender_frame, average_shots_needed: float):
@@ -208,5 +208,21 @@ def get_average_time_needed_for_kill(attacker_frame, defender_frame, average_sho
 	else:
 		count = max(1.0, round(average_shots_needed / ammo_per_burst))
 		ret = aim_time + (average_shots_needed - 1) * (1.0 / fire_rate) + count * relax_time
+
+	return ret
+
+
+def get_track_break_probability(attacker_frame, defender_frame) -> float:
+
+	defender: game_data_loader.UnitStats = defender_frame.unit_stats
+	attacker: game_data_loader.UnitStats = attacker_frame.unit_stats
+
+	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
+	weapon_shell: UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
+
+	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
+	defender_bonuses: StatsBonuses = defender_frame.applied_bonuses
+
+	ret = attacker_bonuses.WeaponTrackDamageProb.apply_bonus(weapon_shell.BrokeTrackProbability.get())
 
 	return ret

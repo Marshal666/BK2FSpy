@@ -214,7 +214,10 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 				pin_button = tk.Button(frame, text="🖈", command=lambda x=unit_path: pin_unit(x))
 				pin_button.grid(row=row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
-				unit_img = game_data_loader.get_unit_icon(data.file_system, unit_path)
+				try:
+					unit_img = game_data_loader.get_unit_icon(data.file_system, unit_path)
+				except Exception as e:
+					unit_img = None
 
 				frame.imgs.append(unit_img)
 
@@ -381,6 +384,11 @@ def init_unit_frame(frame: tk.Frame, title: str, unit: str = None, selected_weap
 		relax_time_label_text.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 		Hovertip(relax_time_label_text, "Actual reload time of the weapon", 400)
 		relax_time_entry = tk_utils.create_float_entry(weapons_frame, weapon_shell.RelaxTime, 6)
+		relax_time_entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
+		relax_time_label_text = tk.Label(weapons_frame, text="Broke Track Probability: ")
+		relax_time_label_text.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+		relax_time_entry = tk_utils.create_float_entry(weapons_frame, weapon_shell.BrokeTrackProbability, 6)
 		relax_time_entry.grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 		comparison_frame.init_comparison_frame(data.comparison_frame)

@@ -206,4 +206,9 @@ def init_comparison_frame(frame: tk.Frame):
 	tk.Label(frame, text="Average damage shots needed for kill: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	tk.Label(frame, text=f"{damage_shots_needed}").grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
+	track_break_chance = unit_comparer.get_track_break_probability(data.attacker_frame, data.defender_frame)
+	track_break_chance = min(100.0, max(0.0, track_break_chance))
+	tk.Label(frame, text="Track break probability alone: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
+	tk.Label(frame, text=f"{track_break_chance:.1f}%").grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+
 	return

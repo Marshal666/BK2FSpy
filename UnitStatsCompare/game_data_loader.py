@@ -548,6 +548,7 @@ class UnitStats:
 			self.Area2 = tk.DoubleVar()
 			self.FireRate = tk.DoubleVar()
 			self.RelaxTime = tk.DoubleVar()
+			self.BrokeTrackProbability = tk.DoubleVar()
 
 		@property
 		def min_max_damage(self):
@@ -626,6 +627,9 @@ class UnitStats:
 
 			ret.RelaxTime.set(float(shell.RelaxTime))
 			ret.RelaxTime.trace_add("write", lambda x, y, z: on_edit_command())
+
+			ret.BrokeTrackProbability.set(float(shell.BrokeTrackProbability))
+			ret.BrokeTrackProbability.trace_add("write", lambda x, y, z: on_edit_command())
 
 			return ret
 

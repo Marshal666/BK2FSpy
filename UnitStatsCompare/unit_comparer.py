@@ -227,3 +227,49 @@ def get_track_break_probability(attacker_frame, defender_frame) -> float:
 	ret = attacker_bonuses.WeaponTrackDamageProb.apply_bonus(weapon_shell.BrokeTrackProbability.get())
 
 	return ret
+
+
+def get_overall_piercing_min_max(attacker_frame, defender_frame) -> tuple[float, float]:
+
+	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
+	weapon_shell: UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
+
+	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
+	defender_bonuses: StatsBonuses = defender_frame.applied_bonuses
+
+	piercing_min = max(0, weapon_shell.Piercing.get() - weapon_shell.PiercingRandom.get())
+	piercing_max = max(0, weapon_shell.Piercing.get() + weapon_shell.PiercingRandom.get())
+
+	return attacker_bonuses.WeaponPiercing.apply_bonus(piercing_min), attacker_bonuses.WeaponPiercing.apply_bonus(piercing_max)
+
+
+def get_overall_damage_min_max(attacker_frame, defender_frame) -> tuple[float, float]:
+
+	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
+	weapon_shell: UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
+
+	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
+	defender_bonuses: StatsBonuses = defender_frame.applied_bonuses
+
+	damage_min = max(0, weapon_shell.DamagePower.get() - weapon_shell.DamageRandom.get())
+	damage_max = max(0, weapon_shell.DamagePower.get() + weapon_shell.DamageRandom.get())
+
+	damage_min = attacker_bonuses.WeaponDamage.apply_bonus(damage_min)
+	damage_max = attacker_bonuses.WeaponDamage.apply_bonus(damage_max)
+
+	damage_min = defender_bonuses.Durability.apply_bonus_as_durability(damage_min)
+	damage_max = defender_bonuses.Durability.apply_bonus_as_durability(damage_max)
+
+	return damage_min, damage_max
+
+
+def get_overall_dispersion(attacker_frame, range: float) -> float:
+
+	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
+	weapon_shell: UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
+
+	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
+
+	dispersion = attacker_bonuses.WeaponDispersion.apply_bonus(weapon_shell.Dispersion.get())
+
+	return dispersion / weapon_shell.RangeMax.get() * range

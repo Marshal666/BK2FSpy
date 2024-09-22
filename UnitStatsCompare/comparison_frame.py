@@ -211,4 +211,16 @@ def init_comparison_frame(frame: tk.Frame):
 	tk.Label(frame, text="Track break probability alone: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	tk.Label(frame, text=f"{track_break_chance:.1f}%").grid(row=row_builder.current, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
+	piercing_min, piercing_max = unit_comparer.get_overall_piercing_min_max(data.attacker_frame, data.defender_frame)
+	damage_min, damage_max = unit_comparer.get_overall_damage_min_max(data.attacker_frame, data.defender_frame)
+	overall_dispersion = unit_comparer.get_overall_dispersion(data.attacker_frame, frame.range_pick.get())
+
+	tk_utils.create_2x_labels(frame, "Overall piercing: ", f"Min: {piercing_min:.1f}, Max: {piercing_max:.1f}",
+							  row_builder.next)
+
+	tk_utils.create_2x_labels(frame, "Overall damage: ", f"Min: {damage_min:.1f}, Max: {damage_max:.1f}",
+							  row_builder.next)
+
+	tk_utils.create_2x_labels(frame, "Overall dispersion: ", f"{overall_dispersion:.4f}", row_builder.next)
+
 	return

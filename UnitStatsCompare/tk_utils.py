@@ -226,3 +226,11 @@ def create_ability_entry(root, unit_stats: game_data_loader.UnitStats):
 		button.grid(row=0, column=i, padx=2, pady=2, sticky=tk.W)
 
 	return ret
+
+def create_2x_labels(frame: tk.Frame, text1: str, text2: str, row: int, padx=consts.PAD_X, pady=consts.PAD_Y):
+
+	tk.Label(frame, text=text1).grid(row=row, column=0, padx=padx, pady=pady, sticky=tk.W)
+
+	tk.Label(frame, text=text2).grid(row=row, column=1, padx=padx, pady=pady, sticky=tk.E)
+
+	return

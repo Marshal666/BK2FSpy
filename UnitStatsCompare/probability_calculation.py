@@ -70,3 +70,19 @@ def get_hit_count(aabb_half_size: Vector2,
 											 aabb_center.x, aabb_center.y,
 											 dir.x, dir.y,
 											 aabb_coef, dispersion, area_damage)
+
+
+def get_shot_count(tests: int,
+				   seed: int,
+				   hit_chance: float,
+				   area_chance: float,
+				   area_damage_coef: float,
+				   hp_original: float,
+				   damage_min: float,
+				   damage_max: float):
+
+	# called from C++ bind
+	return  aabb_hit_calc.get_average_amount_of_shots_need_for_kill(tests, seed,
+																	hit_chance, area_chance,
+																	area_damage_coef, hp_original,
+																	damage_min, damage_max)

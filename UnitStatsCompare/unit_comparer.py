@@ -120,7 +120,7 @@ def get_average_amount_of_shots_needed_for_kill(attacker_frame, defender_frame, 
 
 	ret = float("Inf")
 
-	if hit_chance <= K_EPSILON:
+	if abs(hit_chance) <= K_EPSILON:
 		return ret
 
 	# NaN check
@@ -154,16 +154,17 @@ def get_average_amount_of_shots_needed_for_kill(attacker_frame, defender_frame, 
 
 	avg_damage = (damage_min + damage_max) / 2.0
 
+	if abs(avg_damage) <= K_EPSILON:
+		return ret
+
 	alpha = data.area_damage_coeff.get()
 
-	if alpha != alpha:
-		return float("NaN")
+	tries = data.shot_simulation_iterations.get()
 
-	ret = hp / (avg_damage * (alpha * area_chance + hit_chance))
+	ret = probability_calculation.get_shot_count(tries, data.simulation_rng_seed.get(), hit_chance, area_chance,
+												 alpha, hp, damage_min, damage_max)
 
-	ret = max(1.0, ret)
-
-	return round(ret)
+	return max(1.0, round(ret, 1))
 
 
 def get_average_time_needed_for_kill(attacker_frame, defender_frame, average_shots_needed: float):

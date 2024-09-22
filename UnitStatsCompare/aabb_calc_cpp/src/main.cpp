@@ -6,6 +6,8 @@
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
+#define VERSION_INFO "0.0.2"
+
 typedef unsigned short ushort;
 
 template <typename T> inline T squared(T x) {
@@ -304,6 +306,31 @@ std::tuple<int, int, int, int> get_hit_probabilities(int iterations, int seed, f
     return std::make_tuple(hits, bounceOffs, areaDamages, misses);
 }
 
+float get_average_amount_of_shots_need_for_kill(int iterations, int seed, float hitChance, float areaChance, float areaDamageCoef, float hpOriginal, float damageMin, float damageMax) {
+    
+    int sum = 0;
+
+    RandomGen::InitSeed((unsigned int)seed);
+
+    for (int i = 0; i < iterations; i++) {
+        float hp = hpOriginal;
+        int count = 0;
+        while (hp > 0) {
+            float hitRng = RandomGen::RandomFloat01();
+            if (hitRng <= areaChance) {
+                hp -= (damageMin + (damageMax - damageMin) * RandomGen::RandomFloat01()) * areaDamageCoef;
+            }
+            else if (hitRng <= areaChance + hitChance) {
+                hp -= (damageMin + (damageMax - damageMin) * RandomGen::RandomFloat01());
+            }
+            count++;
+        }
+        sum += count;
+    }
+
+    return float(sum) / iterations;
+}
+
 namespace py = pybind11;
 
 PYBIND11_MODULE(aabb_hit_calc, m) {
@@ -317,12 +344,19 @@ PYBIND11_MODULE(aabb_hit_calc, m) {
            :toctree: _generate
 
            get_hit_probabilities
+           get_average_amount_of_shots_need_for_kill
     )pbdoc";
 
     m.def("get_hit_probabilities", &get_hit_probabilities, R"pbdoc(
         Calculates the probabilites for hitting AABB
 
-        It returns .
+        It returns tuple[int, int, int, int].
+    )pbdoc");
+
+    m.def("get_average_amount_of_shots_need_for_kill", &get_average_amount_of_shots_need_for_kill, R"pbdoc(
+        Calculates the average amount of shots needed for killing the target
+
+        It returns a float.
     )pbdoc");
 
 #ifdef VERSION_INFO

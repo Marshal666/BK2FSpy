@@ -177,24 +177,40 @@ def open_simulation_config_command():
 
 		return
 
+	def on_shot_iterations_edited(arg1, arg2, arg3):
+		# print(f"arg1: {arg1}, arg2: {arg2}, arg3: {arg3}, value: {data.simulation_iterations.get()}")
+
+		if not window.shot_iters_input.get() or not window.shot_iters_input.get().strip():
+			data.simulation_iterations.set(1)
+			window.iters_input.update()
+			return
+
+		#print(f"arg1: {arg1}, arg2: {arg2}, arg3: {arg3}, value: {data.simulation_iterations.get()}")
+
+		return
+
 	def on_close(event):
 		data.simulation_iterations = tk.IntVar(value=data.simulation_iterations.get())
 		data.simulation_iterations.not_traced = True
 		data.simulation_rng_seed = tk.IntVar(value=data.simulation_rng_seed.get())
 		data.simulation_rng_seed.not_traced = True
+		data.shot_simulation_iterations = tk.IntVar(value=data.shot_simulation_iterations.get())
+		data.shot_simulation_iterations.not_traced = True
 		return
 
 	if data.simulation_iterations.not_traced:
 		data.simulation_iterations.callback = data.simulation_iterations.trace_add("write", on_iterations_edited)
 	if data.simulation_rng_seed.not_traced:
 		data.simulation_rng_seed.callback = data.simulation_rng_seed.trace_add("write", on_rng_seed_edited)
+	if data.shot_simulation_iterations.not_traced:
+		data.shot_simulation_iterations.callback = data.shot_simulation_iterations.trace_add("write", on_shot_iterations_edited)
 
 	row_builder = RowBuilder()
 
 	window = tk.Toplevel()
 	window.title('Edit simulation configuration')
-	window.geometry('320x120')
-	window.minsize(300, 100)
+	window.geometry('320x130')
+	window.minsize(300, 120)
 	window.bind("<Destroy>", on_close)
 
 	validate_command = window.register(tk_utils.validate_integer_input)
@@ -217,6 +233,12 @@ def open_simulation_config_command():
 	window.area_damage_coeff_input = tk_utils.create_float_entry(window, data.area_damage_coeff, 5)
 	window.area_damage_coeff_input.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
 
+	iter_count_label = tk.Label(window, text="Shot Iteration count: ")
+	iter_count_label.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=W)
+	Hovertip(iter_count_label, "The number of shot iterations for average amount of shots needed calculation, the more the better", hover_delay=500)
+	window.shot_iters_input = tk.Entry(window, textvariable=data.shot_simulation_iterations, validate="key", validatecommand=(validate_command, "%P"), width=15)
+	window.shot_iters_input.grid(row=row_builder.current, column=1, padx=5, pady=5, sticky=E)
+
 	window.grab_set()  # Prevent interaction with the original window until this one is closed
 	window.focus_set()  # Give focus to the new window
 
@@ -234,6 +256,8 @@ def main():
 	data.simulation_iterations.not_traced = True
 	data.simulation_rng_seed = IntVar(value=1337)
 	data.simulation_rng_seed.not_traced = True
+	data.shot_simulation_iterations = IntVar(value=4000)
+	data.shot_simulation_iterations.not_traced = True
 	data.area_damage_coeff = DoubleVar(value=0.3)
 	recent_items.load_recent_items()
 

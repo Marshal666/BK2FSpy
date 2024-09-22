@@ -184,6 +184,12 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 						messagebox.showinfo("Error", "Selected file is not a unit!")
 						return
 
+					unit_xml = bk2_xml_utils.load_xml_file(data.file_system, unit_path)
+
+					if unit_xml.tag != game_data_loader.MECH_UNIT_RPGS_STATS_DEF:
+						messagebox.showwarning("Not supported", "Infantry is currently not supported.")
+						return
+
 					init_unit_frame(unit_frame, title, unit_path)
 
 					unit_name = game_data_loader.get_unit_name(data.file_system, unit_path)
@@ -199,6 +205,12 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 
 					if not game_data_loader.is_unit(data.file_system, unit_path):
 						messagebox.showinfo("Error", "Selected file is not a unit!")
+						return
+
+					unit_xml = bk2_xml_utils.load_xml_file(data.file_system, unit_path)
+
+					if unit_xml.tag != game_data_loader.MECH_UNIT_RPGS_STATS_DEF:
+						messagebox.showwarning("Not supported", "Infantry is currently not supported.")
 						return
 
 					unit_name = game_data_loader.get_unit_name(data.file_system, unit_path)

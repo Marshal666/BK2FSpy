@@ -67,15 +67,19 @@ def get_aabb_hit_probability(attacker_frame, defender_frame, range: float, attac
 
 
 def get_one_shot_probability(attacker_frame, defender_frame):
+
 	defender: game_data_loader.UnitStats = defender_frame.unit_stats
 	attacker: game_data_loader.UnitStats = attacker_frame.unit_stats
 
 	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
 	weapon_shell : UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
 
-	defender_hp = defender.MaxHP.get()
-	damage = weapon_shell.DamagePower.get()
-	damage_random = weapon_shell.DamageRandom.get()
+	try:
+		defender_hp = defender.MaxHP.get()
+		damage = weapon_shell.DamagePower.get()
+		damage_random = weapon_shell.DamageRandom.get()
+	except Exception:
+		return float("NaN"), float("NaN"), float("NaN"), float("NaN")
 
 	bonus_add = attacker_frame.applied_bonuses.WeaponDamage.add_bonus
 	bonus_mult = attacker_frame.applied_bonuses.WeaponDamage.mult_bonus
@@ -94,7 +98,10 @@ def average_amount_of_damage_shots_needed_for_killing(attacker_frame, defender_f
 	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
 	weapon_shell: UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
 
-	hp = defender.MaxHP.get()
+	try:
+		hp = defender.MaxHP.get()
+	except Exception:
+		return float("NaN")
 
 	damage_min, damage_max = weapon_shell.min_max_damage
 
@@ -136,7 +143,10 @@ def get_average_amount_of_shots_needed_for_kill(attacker_frame, defender_frame, 
 	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
 	weapon_shell: UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
 
-	hp = defender.MaxHP.get()
+	try:
+		hp = defender.MaxHP.get()
+	except Exception:
+		return float("NaN")
 
 	if hp != hp:
 		return float("NaN")
@@ -183,7 +193,10 @@ def get_average_time_needed_for_kill(attacker_frame, defender_frame, average_sho
 	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
 	defender_bonuses: StatsBonuses = defender_frame.applied_bonuses
 
-	aim_time = weapon_shell.AimingTime.get()
+	try:
+		aim_time = weapon_shell.AimingTime.get()
+	except Exception:
+		return float("NaN")
 
 	aim_time = attacker_bonuses.WeaponAimTime.apply_bonus(aim_time)
 
@@ -224,7 +237,10 @@ def get_track_break_probability(attacker_frame, defender_frame) -> float:
 	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
 	defender_bonuses: StatsBonuses = defender_frame.applied_bonuses
 
-	ret = attacker_bonuses.WeaponTrackDamageProb.apply_bonus(weapon_shell.BrokeTrackProbability.get())
+	try:
+		ret = attacker_bonuses.WeaponTrackDamageProb.apply_bonus(weapon_shell.BrokeTrackProbability.get())
+	except Exception:
+		return float("NaN")
 
 	return ret
 
@@ -237,8 +253,11 @@ def get_overall_piercing_min_max(attacker_frame, defender_frame) -> tuple[float,
 	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
 	defender_bonuses: StatsBonuses = defender_frame.applied_bonuses
 
-	piercing_min = max(0, weapon_shell.Piercing.get() - weapon_shell.PiercingRandom.get())
-	piercing_max = max(0, weapon_shell.Piercing.get() + weapon_shell.PiercingRandom.get())
+	try:
+		piercing_min = max(0, weapon_shell.Piercing.get() - weapon_shell.PiercingRandom.get())
+		piercing_max = max(0, weapon_shell.Piercing.get() + weapon_shell.PiercingRandom.get())
+	except Exception:
+		return float("NaN"), float("NaN")
 
 	return attacker_bonuses.WeaponPiercing.apply_bonus(piercing_min), attacker_bonuses.WeaponPiercing.apply_bonus(piercing_max)
 
@@ -251,8 +270,11 @@ def get_overall_damage_min_max(attacker_frame, defender_frame) -> tuple[float, f
 	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
 	defender_bonuses: StatsBonuses = defender_frame.applied_bonuses
 
-	damage_min = max(0, weapon_shell.DamagePower.get() - weapon_shell.DamageRandom.get())
-	damage_max = max(0, weapon_shell.DamagePower.get() + weapon_shell.DamageRandom.get())
+	try:
+		damage_min = max(0, weapon_shell.DamagePower.get() - weapon_shell.DamageRandom.get())
+		damage_max = max(0, weapon_shell.DamagePower.get() + weapon_shell.DamageRandom.get())
+	except Exception:
+		return float("NaN"), float("NaN")
 
 	damage_min = attacker_bonuses.WeaponDamage.apply_bonus(damage_min)
 	damage_max = attacker_bonuses.WeaponDamage.apply_bonus(damage_max)
@@ -270,6 +292,9 @@ def get_overall_dispersion(attacker_frame, range: float) -> float:
 
 	attacker_bonuses: StatsBonuses = attacker_frame.applied_bonuses
 
-	dispersion = attacker_bonuses.WeaponDispersion.apply_bonus(weapon_shell.Dispersion.get())
+	try:
+		dispersion = attacker_bonuses.WeaponDispersion.apply_bonus(weapon_shell.Dispersion.get())
+	except Exception:
+		return float("NaN")
 
 	return dispersion / weapon_shell.RangeMax.get() * range

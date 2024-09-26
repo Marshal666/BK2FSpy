@@ -222,7 +222,12 @@ def create_ability_entry(root, unit_stats: game_data_loader.UnitStats):
 		variable = ability.Enabled
 
 		button = create_toggle_image_button(ret, variable, image_enabled, image_disabled, on_text, off_text)
-		Hovertip(button, text=ability.Name, hover_delay=400)
+		desc = f"{ability.Name}"
+		stats_bonuses = getattr(ability, "StatsBonus", None)
+		if stats_bonuses:
+			desc += f"\n\n{ability.StatsBonus.format_to_desc()}"
+			desc = desc.strip()
+		Hovertip(button, text=desc, hover_delay=400)
 		button.grid(row=0, column=i, padx=2, pady=2, sticky=tk.W)
 
 	return ret

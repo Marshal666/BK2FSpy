@@ -271,6 +271,18 @@ class StatsBonuses:
 				return 0
 			return self.add_bonus + self.mult_bonus
 
+		def is_non_effective(self):
+			return self.zero_count == 0 and self.mult_bonus == 1.0 and self.add_bonus == 0.0
+
+		def is_effective(self):
+			return not self.is_non_effective()
+
+		def formatted_desc(self) -> str:
+			p1 = f"AddBonus: {self.add_bonus}\n" if self.add_bonus != 0.0 else ""
+			p2 = f"MultBouns: {self.mult_bonus}\n" if self.mult_bonus != 1.0 else ""
+			p3 = f"ZeroCount: {self.zero_count}\n" if self.zero_count != 0 else ""
+			return p1 + p2 + p3
+
 	PROPERTIES = [	"Durability",
 					"SmallAABBCoeff",
 					"Camouflage",
@@ -301,6 +313,16 @@ class StatsBonuses:
 			s2 = getattr(other, p, StatsBonuses.StatsBonus())
 			setattr(ret, p, s1 + s2)
 			# ret.add_bonus = s1.add_bonus + s2.add_bonus
+		return ret
+
+	def format_to_desc(self) -> str:
+		ret = ""
+		for p in StatsBonuses.PROPERTIES:
+			s = getattr(self, p, StatsBonuses.StatsBonus())
+			if s.is_effective():
+				ret += f"{p}\n"
+				ret += s.formatted_desc()
+				ret += "\n"
 		return ret
 
 	@staticmethod

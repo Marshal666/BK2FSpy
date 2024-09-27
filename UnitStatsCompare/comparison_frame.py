@@ -127,7 +127,8 @@ def init_comparison_frame(frame: tk.Frame):
 
 	hits, bounce_offs, area_damages, misses = unit_comparer.get_aabb_hit_probability(data.attacker_frame, data.defender_frame,
 																	   frame.range_pick.get(), frame.dir_pick.get())
-	hit_probability = hits/data.simulation_iterations.get()
+	hit_probability = hits / data.simulation_iterations.get()
+	area_damage_probability = area_damages / data.simulation_iterations.get()
 
 	hit_probability_label = tk.Label(frame, text="AABB Hit probability (approx): ")
 	hit_probability_label.grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
@@ -179,9 +180,11 @@ def init_comparison_frame(frame: tk.Frame):
 	one_shot_label_label = tk.Label(frame, text="One shot chance: ")
 	one_shot_label_label.grid(row=chance_for_one_shot_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	one_shot_chance = unit_comparer.get_one_shot_probability(data.attacker_frame, data.defender_frame)
-	overall_one_shot_chance = one_shot_chance * total_chance
+	area_one_shot_chance = unit_comparer.get_area_one_shot_probability(data.attacker_frame, data.defender_frame)
+	overall_one_shot_chance = one_shot_chance * total_chance + area_one_shot_chance * area_damage_probability
 	one_shot_chance_label = tk.Label(frame, text=f"{overall_one_shot_chance*100:.2f}%")
 	one_shot_chance_label.grid(row=chance_for_one_shot_row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
+	Hovertip(one_shot_chance_label, text=f"One shot chance from direct hits: {one_shot_chance*total_chance*100:.1f}%\nOne shot chance from area damage: {area_one_shot_chance*area_damage_probability*100:.1f}%", hover_delay=400)
 
 	total_damage_shots_needed = unit_comparer.get_average_amount_of_shots_needed_for_kill(data.attacker_frame, data.defender_frame, total_chance, area_chance)
 	damage_shots_needed = unit_comparer.average_amount_of_damage_shots_needed_for_killing(data.attacker_frame, data.defender_frame)

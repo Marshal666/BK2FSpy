@@ -91,6 +91,33 @@ def get_one_shot_probability(attacker_frame, defender_frame):
 														durability_add, durability_mult)
 
 
+def get_area_one_shot_probability(attacker_frame, defender_frame):
+
+	defender: game_data_loader.UnitStats = defender_frame.unit_stats
+	attacker: game_data_loader.UnitStats = attacker_frame.unit_stats
+
+	weapon_index = attacker_frame.weapon_names.index(attacker_frame.selected_weapon.get())
+	weapon_shell: UnitStats.WeaponShellStats = attacker_frame.unit_stats.WeaponsShells[weapon_index]
+
+	try:
+		defender_hp = defender.MaxHP.get()
+		damage = weapon_shell.DamagePower.get()
+		damage_random = weapon_shell.DamageRandom.get()
+	except Exception:
+		return float("NaN"), float("NaN"), float("NaN"), float("NaN")
+
+	bonus_add = attacker_frame.applied_bonuses.WeaponDamage.add_bonus
+	bonus_mult = attacker_frame.applied_bonuses.WeaponDamage.mult_bonus
+
+	durability_add = defender_frame.applied_bonuses.Durability.add_bonus
+	durability_mult = defender_frame.applied_bonuses.Durability.mult_bonus
+
+	alpha = data.area_damage_coeff.get()
+
+	return probability_calculation.area_one_shot_probability(defender_hp, damage, damage_random, bonus_add, bonus_mult,
+														durability_add, durability_mult, alpha)
+
+
 def average_amount_of_damage_shots_needed_for_killing(attacker_frame, defender_frame):
 	defender: game_data_loader.UnitStats = defender_frame.unit_stats
 	attacker: game_data_loader.UnitStats = attacker_frame.unit_stats

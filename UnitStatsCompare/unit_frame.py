@@ -117,8 +117,14 @@ def select_unit_command(unit_frame: tk.Frame, title: str):
 
 				tk.Label(frame, text="Reinf Type: ").grid(row=0, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 
-				reinf_option = tk.StringVar()
-				reinf_option.set(reinfs[0])
+				reinf_option = getattr(frame, "reinf_option", None)
+
+				if reinf_option is None:
+					reinf_option = tk.StringVar()
+
+				if reinf_option.get() not in reinfs:
+					reinf_option.set(reinfs[0])
+				frame.reinf_option = reinf_option
 
 				reinf_options = tk.OptionMenu(frame, reinf_option, *reinfs, command=update_units_in_reinf)
 				reinf_options.grid(row=0, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)

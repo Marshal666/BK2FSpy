@@ -111,6 +111,40 @@ def lerp_color(color1, color2, t):
 	lerped_rgb = tuple(int(c1 + (c2 - c1) * t) for c1, c2 in zip(rgb1, rgb2))
 	return rgb_to_hex(lerped_rgb)
 
+
+def lerp_colors4(color1, color2, color3, color4, w1: float, w2: float, w3: float, pt: float):
+
+	if pt != pt:
+		return color1
+
+	if pt < 0:
+		color_result = color1
+	elif pt <= w1:
+		color_result = lerp_color(color1, color2, pt / w1)
+	elif pt <= w2:
+		color_result = lerp_color(color2, color3, (pt - w1) / (w2 - w1))
+	elif pt <= w3:
+		color_result = lerp_color(color3, color4, (pt - w2) / (w3 - w2))
+	else:
+		color_result = color4
+
+	return color_result
+
+
+def lerp_colors_preset(pt: float):
+
+	c1 = "#00BD00"	# green
+	c2 = "#91BD00"	# yellowish green
+	c3 = "#BD9700"	# orange
+	c4 = "#BD0000"	# red
+
+	w1 = 12
+	w2 = 27
+	w3 = 40
+
+	return lerp_colors4(c1, c2, c3, c4, w1, w2, w3, pt)
+
+
 ########################################################################################################################
 
 

@@ -1,5 +1,5 @@
 
-PROGRAM_VERSION = "v0.4"
+PROGRAM_VERSION = "v0.5"
 APP_NAME = "BK2_Stats_Compare"
 APP_AUTHOR = "FM_Production"
 

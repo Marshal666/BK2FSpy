@@ -4,7 +4,7 @@ import os
 import copy
 import json
 
-CAPACITY = 10
+CAPACITY = 16
 RECENT_ITEMS_FILE = 'recent_items.json'
 
 __recent_items: list[list[str]] = []

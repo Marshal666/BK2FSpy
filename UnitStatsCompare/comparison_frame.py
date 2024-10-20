@@ -71,10 +71,10 @@ def init_comparison_frame(frame: tk.Frame):
 		tk.Label(frame, text="Attacker has no weapon").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, columnspan=2)
 		return
 
+	average_kill_time_row = row_builder.next
+	amount_of_kill_shots_row = row_builder.next
 	chance_for_good_shot_row = row_builder.next
 	chance_for_one_shot_row = row_builder.next
-	amount_of_kill_shots_row = row_builder.next
-	average_kill_time_row = row_builder.next
 
 	attack_directions = AttackDirection.get_str_values()
 	attack_direction = getattr(frame, "attack_direction", None)
@@ -190,16 +190,18 @@ def init_comparison_frame(frame: tk.Frame):
 	damage_shots_needed = unit_comparer.average_amount_of_damage_shots_needed_for_killing(data.attacker_frame, data.defender_frame)
 	average_time_needed = unit_comparer.get_average_time_needed_for_kill(data.attacker_frame, data.defender_frame, total_damage_shots_needed)
 
-	total_damage_shots_label_text = tk.Label(frame, text="Average shots needed for kill (approx): ")
+	shots_coloring = tk_utils.lerp_colors_preset(average_time_needed)
+
+	total_damage_shots_label_text = tk.Label(frame, text="Average shots needed for kill (approx): ", font=("Arial", 12, "bold"))
 	total_damage_shots_label_text.grid(row=amount_of_kill_shots_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	Hovertip(total_damage_shots_label_text, "Approximate number of shots needed for killing the defender")
-	total_damage_shots_label = tk.Label(frame, text=f"{(total_damage_shots_needed if total_damage_shots_needed != float('inf') else '∞')}")
+	total_damage_shots_label = tk.Label(frame, text=f"{(total_damage_shots_needed if total_damage_shots_needed != float('inf') else '∞')}", font=("Arial", 12, "bold"), fg=shots_coloring)
 	total_damage_shots_label.grid(row=amount_of_kill_shots_row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
-	average_kill_time_label_text = tk.Label(frame, text="Average time needed for killing (approx): ")
+	average_kill_time_label_text = tk.Label(frame, text="Average time needed for killing (approx): ", font=("Arial", 12, "bold"))
 	average_kill_time_label_text.grid(row=average_kill_time_row, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)
 	Hovertip(average_kill_time_label_text, "Approximate time needed for killing the defender in seconds")
-	average_kill_time_label = tk.Label(frame, text=f"{average_time_needed:.1f} s")
+	average_kill_time_label = tk.Label(frame, text=f"{average_time_needed:.1f} s", font=("Arial", 12, "bold"), fg=shots_coloring)
 	average_kill_time_label.grid(row=average_kill_time_row, column=1, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=E)
 
 	tk.Label(frame, text="One shot chance alone: ").grid(row=row_builder.next, column=0, padx=consts.PAD_X, pady=consts.PAD_Y, sticky=W)

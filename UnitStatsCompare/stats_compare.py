@@ -16,6 +16,7 @@ import unit_frame
 import recent_units_frame
 import game_data_loader
 import recent_items
+from VerticalScrolledFrame import VerticalScrolledFrame
 
 
 def on_file_system_loaded():
@@ -249,7 +250,7 @@ def main():
 	root = data.root = Tk()
 	root.title(f'BK2 Unit Stats Compare {consts.PROGRAM_VERSION}')
 	root.geometry("1280x1020")
-	root.minsize(800, 600)
+	root.minsize(1024, 620)
 	#root.iconbitmap("icon.ico")
 
 	data.simulation_iterations = IntVar(value=100000)
@@ -294,12 +295,16 @@ def main():
 	data.recent_units_frame.grid(row=row_builder.current, column=0, padx=5, pady=5, columnspan=3, sticky=N+EW)
 	recent_units_frame.init_recent_units_frame(data.recent_units_frame)
 
-	data.attacker_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)
+	#data.attacker_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)
+	data.attacker_frame = VerticalScrolledFrame(root)
 	data.attacker_frame.grid(row=row_builder.next, column=0, padx=5, pady=5, sticky=NW)
+	data.attacker_frame = data.attacker_frame.interior
 	unit_frame.init_unit_frame(data.attacker_frame, consts.ATTACKER_FRAME_TITLE)
 
-	data.defender_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)
+	#data.defender_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)
+	data.defender_frame = VerticalScrolledFrame(root)
 	data.defender_frame.grid(row=row_builder.current, column=2, padx=5, pady=5, sticky=NE)
+	data.defender_frame = data.defender_frame.interior
 	unit_frame.init_unit_frame(data.defender_frame, consts.DEFENDER_FRAME_TITLE)
 
 	data.comparison_frame = tk.Frame(root, bd=1, relief=tk.SUNKEN)

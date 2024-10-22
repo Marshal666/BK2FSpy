@@ -231,7 +231,7 @@ def get_average_time_needed_for_kill(attacker_frame, defender_frame, average_sho
 		return float("Inf")
 
 	# Time's a bit more "diverse" without this rounding
-	average_shots_needed = round(average_shots_needed)
+	#average_shots_needed = round(average_shots_needed)
 
 	try:
 		ammo_per_burst = weapon_shell.AmmoPerBurst.get()

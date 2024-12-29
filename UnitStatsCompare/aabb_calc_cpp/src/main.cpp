@@ -14,6 +14,12 @@ template <typename T> inline T squared(T x) {
     return x * x;
 }
 
+const float kEpsilon = 0.0001f;
+
+bool floatEquals(float a, float b) {
+    return std::abs(a - b) <= kEpsilon;
+}
+
 struct Vector2 {
 
 public:
@@ -25,7 +31,7 @@ public:
         x = y = 0;
     }
 
-    Vector2(const float x, const float y) {
+    Vector2(const float x, const float y) {                                                                            
         this->x = x;
         this->y = y;
     }
@@ -132,6 +138,11 @@ namespace RandomGen {
         return float(distr(gen));
     }
 
+    float RandomFloatRange(float from, float to) {
+        std::uniform_real_distribution<> distr(from, to);
+        return float(distr(gen));
+    }
+
     Vector2 RandQuardInCircle(float dispersion, float fRatio=0.0f, Vector2 TrajLine=Vector2(0,0)) {
         int temp = RandomInt(65536);
         Vector2 dir = Vector2::DirectionToVector(temp);
@@ -147,7 +158,9 @@ namespace RandomGen {
         else
         {
             TrajLine.Normalize();
-            output = TrajLine * fRandR * dir.x * fRatio + Vector2(-TrajLine.y, TrajLine.x) * fRandR * dir.y;
+            output = 
+                TrajLine * fRandR * dir.x * fRatio + 
+                Vector2(-TrajLine.y, TrajLine.x) * fRandR * dir.y;
         }
 
         return output;
@@ -216,8 +229,10 @@ public:
         }
 
         return
-            Mathf::Sign(Mathf::STriangle(v1, v2, point)) == rightSign && Mathf::Sign(Mathf::STriangle(v2, v3, point)) == rightSign &&
-            Mathf::Sign(Mathf::STriangle(v3, v4, point)) == rightSign && Mathf::Sign(Mathf::STriangle(v4, v1, point)) == rightSign;
+            Mathf::Sign(Mathf::STriangle(v1, v2, point)) == rightSign && 
+            Mathf::Sign(Mathf::STriangle(v2, v3, point)) == rightSign &&
+            Mathf::Sign(Mathf::STriangle(v3, v4, point)) == rightSign && 
+            Mathf::Sign(Mathf::STriangle(v4, v1, point)) == rightSign;
     }
 
     bool IntersectsWithCircle(Vector2 circleCenter, float radius) {
@@ -226,7 +241,11 @@ public:
             return true;
 
         const Vector2 newCenter = circleCenter - center;
-        const Vector2 localCoordCenter = Vector2(newCenter.x * dir.x + newCenter.y * dir.y, -newCenter.x * dir.y + newCenter.y * dir.x);
+        const Vector2 localCoordCenter = 
+            Vector2(
+                newCenter.x * dir.x + newCenter.y * dir.y, 
+                -newCenter.x * dir.y + newCenter.y * dir.x
+            );
 
         float dist = 0;
 
@@ -271,9 +290,22 @@ public:
 
 };
 
-std::tuple<int, int, int, int> get_hit_probabilities(int iterations, int seed, float AABBHalfSize_x, float AABBHalfSize_y, float AABBCenter_x, float AABBCenter_y, float dir_x, float dir_y, float AABBCoef, float dispersion, float areaDamage) {
+std::tuple<int, int, int, int> get_hit_probabilities(
+        int iterations, 
+        int seed, 
+        float AABBHalfSize_x, 
+        float AABBHalfSize_y, 
+        float AABBCenter_x, 
+        float AABBCenter_y, 
+        float dir_x, 
+        float dir_y, 
+        float AABBCoef, 
+        float dispersion, 
+        float areaDamage
+    ) {
 
-    Vector2 AABBCenter = Vector2(AABBCenter_x, AABBCenter_y), AABBHalfSize = Vector2(AABBHalfSize_x, AABBHalfSize_y), dir = Vector2(dir_x, dir_y);
+    Vector2 AABBCenter = Vector2(AABBCenter_x, AABBCenter_y), 
+        AABBHalfSize = Vector2(AABBHalfSize_x, AABBHalfSize_y), dir = Vector2(dir_x, dir_y);
 
     if (iterations < 1)
         return std::make_tuple(0, 0, 0, 0);
@@ -306,7 +338,16 @@ std::tuple<int, int, int, int> get_hit_probabilities(int iterations, int seed, f
     return std::make_tuple(hits, bounceOffs, areaDamages, misses);
 }
 
-float get_average_amount_of_shots_need_for_kill(int iterations, int seed, float hitChance, float areaChance, float areaDamageCoef, float hpOriginal, float damageMin, float damageMax) {
+float get_average_amount_of_shots_need_for_kill(
+        int iterations, 
+        int seed, 
+        float hitChance, 
+        float areaChance, 
+        float areaDamageCoef, 
+        float hpOriginal, 
+        float damageMin, 
+        float damageMax
+    ) {
     
     int sum = 0;
 
@@ -318,7 +359,8 @@ float get_average_amount_of_shots_need_for_kill(int iterations, int seed, float 
         while (hp > 0) {
             float hitRng = RandomGen::RandomFloat01();
             if (hitRng <= areaChance) {
-                hp -= (damageMin + (damageMax - damageMin) * RandomGen::RandomFloat01()) * areaDamageCoef;
+                hp -= (damageMin + (damageMax - damageMin) * RandomGen::RandomFloat01())
+                    * areaDamageCoef;
             }
             else if (hitRng <= areaChance + hitChance) {
                 hp -= (damageMin + (damageMax - damageMin) * RandomGen::RandomFloat01());
@@ -329,6 +371,147 @@ float get_average_amount_of_shots_need_for_kill(int iterations, int seed, float 
     }
 
     return float(sum) / iterations;
+}
+
+std::tuple<int, int> get_unit_vs_unit_comparison(
+        int iterations, 
+        int seed, 
+        float unit1Hp,
+        float unit2Hp,
+        float unit1HitChance,
+        float unit2HitChance,
+        float unit1AreaChance,
+        float unit2AreaChance,
+        float unit1DamageMin,
+        float unit2DamageMin,
+        float unit1DamageMax,
+        float unit2DamageMax,
+        float unit1AimTime,
+        float unit2AimTime,
+        float unit1RelaxTime,
+        float unit2RelaxTime,
+        float unit1FireRate,
+        float unit2FireRate,
+        int unit1AmmoPerBurst,
+        int unit2AmmoPerBurst,
+        float areaDamageCoef
+    ) {
+
+    if (iterations < 1) {
+        return std::make_tuple(0, 0);
+    }
+
+    int unit1_wins = 0, unit2_wins = 0;
+
+    RandomGen::InitSeed((unsigned int)seed);
+
+    // if unit2 has no weapon
+    if (unit2AimTime < 0) {
+        if (unit1HitChance > 0 && unit1DamageMax > 0) {
+            unit1_wins = iterations;
+            return std::make_tuple(unit1_wins, unit2_wins);
+        }
+        if (unit1AreaChance > 0 && unit1DamageMax > 0) {
+            unit1_wins = iterations;
+            return std::make_tuple(unit1_wins, unit2_wins);
+        }
+        return std::make_tuple(unit1_wins, unit2_wins);
+    }
+
+    const int BK2_TICKRATE = 20;
+    const float BK2_TICKTIME = 1.0 / BK2_TICKRATE;
+
+    //unit1AimTime = std::ceil(unit1AimTime * BK2_TICKRATE) / BK2_TICKRATE;
+    //unit2AimTime = std::ceil(unit2AimTime * BK2_TICKRATE) / BK2_TICKRATE;
+
+    //unit1RelaxTime = std::ceil(unit1RelaxTime * BK2_TICKRATE) / BK2_TICKRATE;
+    //unit2RelaxTime = std::ceil(unit2RelaxTime * BK2_TICKRATE) / BK2_TICKRATE;
+
+    auto simulate_hit = [&]
+            (float& defender, const float attackerHitChance, const float attackerAreaChance, 
+            const float attackerDamageMin, const float attackerDamageMax) {
+            float hitRng = RandomGen::RandomFloat01();
+            if (hitRng < attackerAreaChance) {
+                // area dmg
+                defender -= 
+                    RandomGen::RandomFloatRange(attackerDamageMin, attackerDamageMax)
+                    * areaDamageCoef;
+                return;
+            }
+            else if (hitRng <= attackerAreaChance + attackerHitChance) {
+                // full dmg
+                defender -= RandomGen::RandomFloatRange(attackerDamageMin, attackerDamageMax);
+                return;
+            }
+            // no dmg
+            return;
+    };
+
+    for (int i = 0; i < iterations; i++) {
+
+        float unit1 = unit1Hp;
+        float unit2 = unit2Hp;
+
+        float unit1Timer = unit1AimTime;
+        float unit2Timer = unit2AimTime;
+
+        unit1Timer = std::ceil(unit1Timer * BK2_TICKRATE) / BK2_TICKRATE;
+        unit2Timer = std::ceil(unit2Timer * BK2_TICKRATE) / BK2_TICKRATE;
+
+        int unit1Burst = unit1AmmoPerBurst;
+        int unit2Burst = unit2AmmoPerBurst;
+
+        while (unit1 > 0 && unit2 > 0) {
+
+            float shooter = std::min(unit1Timer, unit2Timer);
+
+            if (floatEquals(shooter, unit1Timer)) {
+
+                simulate_hit(
+                    unit2, unit1HitChance, unit1AreaChance, unit1DamageMin, unit1DamageMax
+                );
+
+                //update timer
+                unit1Burst--;
+                if (unit1Burst < 1) {
+                    unit1Timer += unit1RelaxTime;
+                    unit1Burst = unit1AmmoPerBurst;
+                }
+                else {
+                    unit1Timer += 60.0f / unit1FireRate;
+                }
+                unit1Timer = std::ceil(unit1Timer * BK2_TICKRATE) / BK2_TICKRATE;
+            }
+
+            if (floatEquals(shooter, unit2Timer)) {
+
+                simulate_hit(
+                    unit1, unit2HitChance, unit2AreaChance, unit2DamageMin, unit2DamageMax
+                );
+
+                //update timer
+                unit2Burst--;
+                if (unit2Burst < 1) {
+                    unit2Timer += unit2RelaxTime;
+                    unit2Burst = unit2AmmoPerBurst;
+                } else {
+                    unit2Timer += 60.0f / unit2FireRate;
+                }
+                unit2Timer = std::ceil(unit2Timer * BK2_TICKRATE) / BK2_TICKRATE;
+            }
+
+        }
+
+        if (unit1 <= 0)
+            unit2_wins++;
+
+        if (unit2 <= 0)
+            unit1_wins++;
+
+    }
+
+    return std::make_tuple(unit1_wins, unit2_wins);
+
 }
 
 namespace py = pybind11;

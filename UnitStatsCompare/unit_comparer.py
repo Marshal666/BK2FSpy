@@ -326,3 +326,55 @@ def get_overall_dispersion(attacker_frame, range: float) -> float:
 		return float("NaN")
 
 	return dispersion / weapon_shell.RangeMax.get() * range
+
+
+class CompareResults:
+
+	def __init__(self, attacker, defender, attack_range, attack_direction, attack_side):
+
+		self.attacker = attacker
+		self.defender = defender
+
+		self.piercing_probability = get_piercing_probability(attacker, defender, attack_side)
+
+		hits, bounce_offs, area_damages, misses = (
+			get_aabb_hit_probability(attacker, defender, attack_range, attack_direction))
+		self.aabb_hits = hits
+		self.aabb_bounce_offs = bounce_offs
+		self.aabb_area_damages = area_damages
+		self.aabb_misses = misses
+
+		self.hit_probability = hits / data.simulation_iterations.get()
+		self.area_damage_probability = area_damages / data.simulation_iterations.get()
+
+		self.cover_coeff = data.defender_frame.applied_bonuses.Cover.value()
+		self.cover_coeff = min(1, max(0, self.cover_coeff))
+		cover_coeff = self.cover_coeff
+
+		self.total_chance = self.piercing_probability * self.hit_probability * cover_coeff
+		# TODO? use max area piercing too?
+		self.area_chance = area_damages / data.simulation_iterations.get() * cover_coeff
+
+		self.one_shot_chance = get_one_shot_probability(attacker, defender)
+		self.area_one_shot_chance = get_area_one_shot_probability(attacker, defender)
+		self.overall_one_shot_chance = (
+				self.one_shot_chance * self.total_chance + self.area_one_shot_chance * self.area_damage_probability)
+
+		self.total_damage_shots_needed = (
+			get_average_amount_of_shots_needed_for_kill(attacker, defender, self.total_chance, self.area_chance))
+		self.damage_shots_needed = average_amount_of_damage_shots_needed_for_killing(attacker, defender)
+		self.average_time_needed = get_average_time_needed_for_kill(attacker, defender, self.total_damage_shots_needed)
+
+		self.track_break_chance = get_track_break_probability(attacker, defender)
+		self.track_break_chance = min(100.0, max(0.0, self.track_break_chance))
+
+		self.piercing_min, self.piercing_max = get_overall_piercing_min_max(attacker, defender)
+		self.damage_min, self.damage_max = get_overall_damage_min_max(attacker, defender)
+		self.overall_dispersion = get_overall_dispersion(attacker, attack_range)
+
+		return
+
+
+def compare_unit_vs_unit(unit1: CompareResults, unit2: CompareResults) -> (int, int):
+
+	return

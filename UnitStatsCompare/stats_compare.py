@@ -260,6 +260,7 @@ def main():
 	data.shot_simulation_iterations = IntVar(value=4000)
 	data.shot_simulation_iterations.not_traced = True
 	data.area_damage_coeff = DoubleVar(value=0.3)
+	data.auto_compare_units = BooleanVar(value=True)
 	recent_items.load_recent_items()
 
 	data.menu_bar = tk.Menu(root)

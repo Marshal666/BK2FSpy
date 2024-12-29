@@ -20,3 +20,5 @@ simulation_rng_seed: tkinter.IntVar|None = None #tkinter.IntVar(value=1337)
 shot_simulation_iterations: tkinter.IntVar|None = None #tkinter.IntVar(value=10000)
 
 area_damage_coeff: tkinter.DoubleVar|None = None #tkinter.DoubleVar(value=0.3)
+
+auto_compare_units: tkinter.BooleanVar|None = None
